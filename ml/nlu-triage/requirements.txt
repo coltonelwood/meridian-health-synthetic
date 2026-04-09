@@ -1,0 +1,30 @@
+# NLU triage model dependencies
+# Model: fine-tuned Bio_ClinicalBERT for message urgency classification
+# Maintained by @achen
+
+transformers==4.36.2
+torch==2.1.2
+fastapi==0.108.0
+uvicorn[standard]==0.25.0
+pydantic==2.5.3
+numpy==1.26.2
+pandas==2.1.4
+scikit-learn==1.3.2
+
+# experiment tracking
+# wandb==0.16.1  # disabled, using mlflow instead
+mlflow==2.9.2
+
+# text processing
+regex==2023.10.3
+
+# for serving
+python-multipart==0.0.6
+httpx==0.26.0  # for health checks
+
+# evaluation
+seqeval==1.2.2  # not really needed for classification, leftover from NER experiments
+matplotlib==3.8.2
+
+# NOTE: torch is huge (~2GB). For CPU-only inference, use:
+# pip install torch --index-url https://download.pytorch.org/whl/cpu

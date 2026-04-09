@@ -1,0 +1,431 @@
+# docker-compose.yml - Meridian Health Platform (Development)
+#
+# Usage:
+#   docker compose up -d                    # Start all services
+#   docker compose up -d postgres redis     # Start specific services
+#   docker compose logs -f claims-engine    # Follow logs for a service
+#
+# NOTE: For local dev overrides, see docker-compose.override.yml
+# TODO: Split this into profiles (infra, services, monitoring) -- PLAT-4102
+
+version: "3.8"
+
+x-common-env: &common-env
+  NODE_ENV: development
+  LOG_LEVEL: debug
+  LOG_FORMAT: json
+  HIPAA_AUDIT_ENABLED: "true"
+  RABBITMQ_URL: amqp://meridian:meridian_dev@rabbitmq:5672
+  REDIS_URL: redis://redis:6379
+  ELASTICSEARCH_URL: http://elasticsearch:9200
+
+x-service-defaults: &service-defaults
+  restart: unless-stopped
+  networks:
+    - meridian-net
+  env_file:
+    - .env
+
+services:
+  # ============================================================
+  # Infrastructure
+  # ============================================================
+
+  postgres:
+    image: postgres:15.4-alpine
+    container_name: meridian-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: meridian
+      POSTGRES_PASSWORD: meridian_dev_2024
+      POSTGRES_MULTIPLE_DATABASES: "meridian_auth,meridian_claims,meridian_scheduling,meridian_ehr,meridian_analytics,meridian_docs,meridian_notifications"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/docker/init-multiple-dbs.sh:/docker-entrypoint-initdb.d/init-multiple-dbs.sh
+    networks:
+      - meridian-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U meridian"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: meridian-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - meridian-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: meridian-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: meridian
+      RABBITMQ_DEFAULT_PASS: meridian_dev
+      RABBITMQ_DEFAULT_VHOST: meridian
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./config/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json
+      - ./config/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+    networks:
+      - meridian-net
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.3
+    container_name: meridian-elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - cluster.name=meridian-dev
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - meridian-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    # TODO: This eats ~1.5GB of RAM on my machine. Add a profile so it's opt-in? -- @jenna.k
+
+  minio:
+    image: minio/minio:latest
+    container_name: meridian-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: meridian_minio
+      MINIO_ROOT_PASSWORD: meridian_minio_dev
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - meridian-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
+  # Application Services
+  # ============================================================
+
+  auth:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: services/auth/Dockerfile
+      target: development
+    container_name: meridian-auth
+    ports:
+      - "3001:3001"
+    environment:
+      <<: *common-env
+      SERVICE_NAME: auth
+      PORT: 3001
+      DATABASE_URL: postgres://meridian:meridian_dev_2024@postgres:5432/meridian_auth
+      JWT_SECRET: dev-jwt-secret-do-not-use-in-production
+      JWT_EXPIRY: 3600
+      REFRESH_TOKEN_EXPIRY: 604800
+      SMART_FHIR_ENABLED: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./services/auth/src:/app/services/auth/src
+      - ./libs:/app/libs
+
+  claims-engine:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: services/claims-engine/Dockerfile
+      target: development
+    container_name: meridian-claims
+    ports:
+      - "3002:3002"
+    environment:
+      <<: *common-env
+      SERVICE_NAME: claims-engine
+      PORT: 3002
+      DATABASE_URL: postgres://meridian:meridian_dev_2024@postgres:5432/meridian_claims
+      CLEARINGHOUSE_URL: https://sandbox.availity.com/api/v1
+      CLEARINGHOUSE_API_KEY: ${CLEARINGHOUSE_API_KEY:-dev_key_placeholder}
+      EDI_PARSER_WORKERS: 2
+      CLAIM_ATTACHMENT_BUCKET: meridian-claim-attachments
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    volumes:
+      - ./services/claims-engine/src:/app/services/claims-engine/src
+      - ./libs:/app/libs
+
+  ehr-gateway:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: services/ehr-gateway/Dockerfile
+      target: development
+    container_name: meridian-ehr
+    ports:
+      - "3003:3003"
+      - "3013:3013"    # HL7v2 MLLP listener
+    environment:
+      <<: *common-env
+      SERVICE_NAME: ehr-gateway
+      PORT: 3003
+      MLLP_PORT: 3013
+      DATABASE_URL: postgres://meridian:meridian_dev_2024@postgres:5432/meridian_ehr
+      FHIR_SERVER_BASE_URL: http://hapi-fhir:8080/fhir
+      EPIC_CLIENT_ID: ${EPIC_CLIENT_ID:-}
+      EPIC_PRIVATE_KEY_PATH: /run/secrets/epic_private_key
+      CERNER_CLIENT_ID: ${CERNER_CLIENT_ID:-}
+      # TODO: Add Athenahealth sandbox config -- PLAT-3890
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./services/ehr-gateway/src:/app/services/ehr-gateway/src
+      - ./libs:/app/libs
+
+  scheduling:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: services/scheduling/Dockerfile
+      target: development
+    container_name: meridian-scheduling
+    ports:
+      - "3004:3004"
+    environment:
+      <<: *common-env
+      SERVICE_NAME: scheduling
+      PORT: 3004
+      DATABASE_URL: postgres://meridian:meridian_dev_2024@postgres:5432/meridian_scheduling
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      GOOGLE_CALENDAR_SYNC_ENABLED: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./services/scheduling/src:/app/services/scheduling/src
+      - ./libs:/app/libs
+
+  analytics-api:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: services/analytics-api/Dockerfile
+      target: development
+    container_name: meridian-analytics
+    ports:
+      - "3005:3005"
+    environment:
+      <<: *common-env
+      SERVICE_NAME: analytics-api
+      PORT: 3005
+      DATABASE_URL: postgres://meridian:meridian_dev_2024@postgres:5432/meridian_analytics
+      # Read replica for heavy queries
+      DATABASE_READ_URL: postgres://meridian:meridian_dev_2024@postgres:5432/meridian_analytics
+      CACHE_TTL: 300
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    volumes:
+      - ./services/analytics-api/src:/app/services/analytics-api/src
+      - ./libs:/app/libs
+
+  doc-service:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: services/doc-service/Dockerfile
+      target: development
+    container_name: meridian-docs
+    ports:
+      - "3006:3006"
+    environment:
+      <<: *common-env
+      SERVICE_NAME: doc-service
+      PORT: 3006
+      DATABASE_URL: postgres://meridian:meridian_dev_2024@postgres:5432/meridian_docs
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: meridian_minio
+      S3_SECRET_KEY: meridian_minio_dev
+      S3_BUCKET: meridian-documents
+      S3_REGION: us-east-1
+      OCR_PROVIDER: tesseract
+      # OCR_PROVIDER: aws-textract   # uncomment for prod-like OCR (requires AWS creds)
+      MAX_UPLOAD_SIZE_MB: 50
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./services/doc-service/src:/app/services/doc-service/src
+      - ./libs:/app/libs
+
+  notifications:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: services/notifications/Dockerfile
+      target: development
+    container_name: meridian-notifications
+    ports:
+      - "3007:3007"
+    environment:
+      <<: *common-env
+      SERVICE_NAME: notifications
+      PORT: 3007
+      DATABASE_URL: postgres://meridian:meridian_dev_2024@postgres:5432/meridian_notifications
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-SG.fake_dev_key}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      NOTIFICATION_DRY_RUN: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./services/notifications/src:/app/services/notifications/src
+      - ./libs:/app/libs
+
+  # ---- HAPI FHIR Server (dev/test only) ----
+  # Provides a local FHIR R4 server for EHR integration testing
+  hapi-fhir:
+    image: hapiproject/hapi:v7.0.0
+    container_name: meridian-hapi-fhir
+    ports:
+      - "8080:8080"
+    environment:
+      hapi.fhir.default_encoding: json
+      hapi.fhir.fhir_version: R4
+      hapi.fhir.allow_multiple_delete: "true"
+      spring.datasource.url: jdbc:postgresql://postgres:5432/meridian_ehr
+      spring.datasource.username: meridian
+      spring.datasource.password: meridian_dev_2024
+      spring.datasource.driverClassName: org.postgresql.Driver
+      spring.jpa.properties.hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - meridian-net
+
+  # ---- Commented out services ----
+
+  # DEPRECATED: The old billing service was merged into claims-engine in Q2 2024
+  # Keeping this here in case someone needs to run it for data migration testing
+  # billing:
+  #   <<: *service-defaults
+  #   build:
+  #     context: .
+  #     dockerfile: services/billing/Dockerfile
+  #   container_name: meridian-billing
+  #   ports:
+  #     - "3008:3008"
+  #   environment:
+  #     <<: *common-env
+  #     SERVICE_NAME: billing
+  #     PORT: 3008
+  #     DATABASE_URL: postgres://meridian:meridian_dev_2024@postgres:5432/meridian_billing
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+
+  # TODO: Add ml-scoring-service when we containerize the Python services
+  # Currently, the ML team runs these locally with conda. See ml/README.md
+  # ml-scoring:
+  #   build:
+  #     context: ./ml
+  #     dockerfile: Dockerfile
+  #   container_name: meridian-ml-scoring
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     MODEL_PATH: /models/claims-fraud-v3.pkl
+  #     DATABASE_URL: postgres://meridian:meridian_dev_2024@postgres:5432/meridian_analytics
+  #   volumes:
+  #     - ./ml/models:/models
+
+  # Referral service - still in beta, enable if you're working on referrals
+  # referral-service:
+  #   <<: *service-defaults
+  #   build:
+  #     context: .
+  #     dockerfile: services/referral-service/Dockerfile
+  #     target: development
+  #   container_name: meridian-referrals
+  #   ports:
+  #     - "3009:3009"
+  #   environment:
+  #     <<: *common-env
+  #     SERVICE_NAME: referral-service
+  #     PORT: 3009
+  #     DATABASE_URL: postgres://meridian:meridian_dev_2024@postgres:5432/meridian_referrals
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+  minio_data:
+    driver: local
+
+networks:
+  meridian-net:
+    driver: bridge
+    name: meridian-net

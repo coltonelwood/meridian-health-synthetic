@@ -1,0 +1,172 @@
+{
+  "_description": "Feature flag definitions for the Meridian Health platform.",
+  "_updated": "2025-03-15",
+  "flags": {
+    "enable_new_scheduling_ui": {
+      "description": "New scheduling interface with drag-and-drop calendar and improved slot finder",
+      "type": "boolean",
+      "default": false,
+      "rollout_percentage": 75,
+      "created_at": "2024-11-01",
+      "owner": "Alex Petrov",
+      "status": "rolling_out",
+      "jira": "MHT-4521",
+      "tags": ["frontend", "scheduling"]
+    },
+
+    "claims_auto_adjudication": {
+      "description": "Automatically adjudicate simple claims (single CPT, known payer, clean scrub) without manual review",
+      "type": "boolean",
+      "default": false,
+      "rollout_percentage": 50,
+      "created_at": "2024-09-15",
+      "owner": "Priya Sharma",
+      "status": "rolling_out",
+      "jira": "MHT-4102",
+      "tags": ["billing", "automation"],
+      "constraints": {
+        "payer_ids": ["BCBS", "AETN", "UHHC"],
+        "max_billed_amount": 500.00,
+        "max_line_items": 3
+      }
+    },
+
+    "fhir_bulk_export": {
+      "description": "Enable FHIR Bulk Data Export ($export) endpoint for payer data exchange",
+      "type": "boolean",
+      "default": false,
+      "rollout_percentage": 100,
+      "created_at": "2024-06-01",
+      "owner": "Derek Simmons",
+      "status": "active",
+      "jira": "MHT-3890",
+      "tags": ["fhir", "interop", "compliance"]
+    },
+
+    "patient_chat_beta": {
+      "description": "Real-time chat between patients and care team members (replaces async messaging)",
+      "type": "boolean",
+      "default": false,
+      "rollout_percentage": 10,
+      "created_at": "2025-01-15",
+      "owner": "Maria Chen",
+      "status": "beta",
+      "jira": "MHT-5001",
+      "tags": ["frontend", "communication", "beta"],
+      "beta_users": ["pat-005-e1b7f6a5", "pat-013-a9d5b4c3"]
+    },
+
+    "enhanced_eligibility_check": {
+      "description": "Use the new Availity real-time API for eligibility instead of batch 270/271",
+      "type": "boolean",
+      "default": true,
+      "rollout_percentage": 100,
+      "created_at": "2024-03-01",
+      "owner": "Tom Kowalski",
+      "status": "active",
+      "jira": "MHT-3450",
+      "tags": ["eligibility", "integration"]
+    },
+
+    "telehealth_zoom_integration": {
+      "description": "Use Zoom for telehealth visits instead of Twilio Video",
+      "type": "boolean",
+      "default": true,
+      "rollout_percentage": 100,
+      "created_at": "2024-04-15",
+      "owner": "Alex Petrov",
+      "status": "active",
+      "jira": "MHT-3650",
+      "tags": ["telehealth", "integration"],
+      "_note": "Twilio Video deprecated. This flag should be removed once migration is confirmed complete."
+    },
+
+    "dark_mode": {
+      "description": "Enable dark mode toggle in patient and provider portals",
+      "type": "boolean",
+      "default": false,
+      "rollout_percentage": 0,
+      "created_at": "2024-08-01",
+      "owner": "Frontend Team",
+      "status": "paused",
+      "jira": "MHT-4200",
+      "tags": ["frontend", "ux"],
+      "_note": "Paused due to accessibility concerns with contrast ratios in dark mode. Needs design review."
+    },
+
+    "claims_anomaly_detection": {
+      "description": "ML-based anomaly detection for suspicious claim patterns (upcoding, unbundling)",
+      "type": "boolean",
+      "default": true,
+      "rollout_percentage": 100,
+      "created_at": "2024-07-01",
+      "owner": "James Liu",
+      "status": "active",
+      "jira": "MHT-3950",
+      "tags": ["billing", "ml", "compliance"]
+    },
+
+    "patient_self_scheduling": {
+      "description": "Allow patients to self-schedule appointments without calling the office",
+      "type": "boolean",
+      "default": true,
+      "rollout_percentage": 100,
+      "created_at": "2023-09-01",
+      "owner": "Alex Petrov",
+      "status": "active",
+      "jira": "MHT-2800",
+      "tags": ["scheduling", "patient-portal"],
+      "_note": "STALE FLAG - This has been at 100% for over a year. Should be removed and code cleaned up."
+    },
+
+    "enable_consent_service": {
+      "description": "Route consent management through the new consent-service instead of inline logic",
+      "type": "boolean",
+      "default": false,
+      "rollout_percentage": 25,
+      "created_at": "2025-02-01",
+      "owner": "David Park",
+      "status": "rolling_out",
+      "jira": "MHT-5200",
+      "tags": ["compliance", "hipaa", "consent"]
+    },
+
+    "provider_mobile_app": {
+      "description": "Enable access from the provider mobile app (React Native)",
+      "type": "boolean",
+      "default": false,
+      "rollout_percentage": 0,
+      "created_at": "2025-03-01",
+      "owner": "Frontend Team",
+      "status": "development",
+      "jira": "MHT-5400",
+      "tags": ["mobile", "provider"]
+    },
+
+    "automated_prior_auth": {
+      "description": "Automatically submit prior authorization requests for procedures that require them",
+      "type": "boolean",
+      "default": false,
+      "rollout_percentage": 0,
+      "created_at": "2024-12-01",
+      "owner": "Priya Sharma",
+      "status": "development",
+      "jira": "MHT-4800",
+      "tags": ["billing", "automation", "integration"],
+      "_note": "Blocked on CMS interoperability rule finalization for electronic prior auth"
+    },
+
+    "v2_patient_search": {
+      "description": "Use the new Elasticsearch-backed patient search with phonetic matching",
+      "type": "boolean",
+      "default": false,
+      "rollout_percentage": 100,
+      "created_at": "2024-05-01",
+      "owner": "Maria Chen",
+      "status": "active",
+      "jira": "MHT-3700",
+      "tags": ["search", "patient"],
+      "_note": "STALE FLAG - Has been at 100% since July 2024. Old search code can be removed."
+    }
+  }
+}

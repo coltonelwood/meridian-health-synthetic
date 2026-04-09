@@ -1,0 +1,21 @@
+claim_id,anomaly_type,description,identified_date,resolution
+CLM-2024-0847231,excessive_charge,"Charge of $47,230 for routine office visit (CPT 99213). Average is $150.",2024-03-15,confirmed_fraud
+CLM-2024-0912044,duplicate_submission,"Same patient/CPT/date submitted 4 times across different TINs",2024-04-22,confirmed_fraud
+CLM-2024-1023887,unbundling,"Provider consistently bills components separately instead of using bundled code 43239",2024-05-10,confirmed_fraud
+CLM-2024-1134509,phantom_billing,"Services billed for patient who was hospitalized at different facility on service date",2024-06-03,confirmed_fraud
+CLM-2024-1198234,upcoding,"Pattern of billing 99215 (high complexity) for visits documented as 99213 (low complexity)",2024-06-18,confirmed_fraud
+CLM-2024-1267001,deceased_patient,"Multiple claims submitted for patient 3 months after confirmed death",2024-07-02,confirmed_fraud
+CLM-2024-1345678,excessive_charge,"MRI charge of $22,100 vs average of $2,800 for same CPT in same market",2024-07-15,under_review
+CLM-2024-1401234,high_volume,"Provider billed 87 patient encounters in a single day",2024-08-01,confirmed_fraud
+CLM-2024-1478901,impossible_combo,"Bilateral knee replacement and unicompartmental knee replacement billed same day",2024-08-20,confirmed_error
+CLM-2024-1534567,duplicate_submission,"Identical claim submitted to both primary and secondary insurance simultaneously",2024-09-05,confirmed_error
+CLM-2024-1601234,upcoding,"ER visit coded as Level 5 (99285) but documentation supports Level 3 (99283)",2024-09-22,under_review
+CLM-2024-1678901,phantom_billing,"Provider billed for procedures requiring equipment the facility doesn't have",2024-10-10,confirmed_fraud
+CLM-2024-1723456,excessive_charge,"Physical therapy charge of $8,400 for single session vs average $175",2024-10-25,confirmed_fraud
+CLM-2024-1789012,kickback_pattern,"Referring provider consistently sends patients to single lab with 10x charges",2024-11-08,under_investigation
+CLM-2024-1834567,unbundling,"Lab tests routinely billed as individual components instead of panel code",2024-11-20,confirmed_error
+CLM-2025-0012345,identity_theft,"Claims submitted using stolen patient identity. Patient confirmed no services received.",2025-01-05,confirmed_fraud
+CLM-2025-0089012,weekend_surgery,"Elective hip replacement billed on Christmas Day from outpatient facility",2025-01-18,confirmed_fraud
+CLM-2025-0134567,duplicate_submission,"Same provider submitted identical claim 12 times over 2 weeks",2025-02-03,confirmed_error
+CLM-2025-0201234,phantom_billing,"Home health visits billed during period patient was in skilled nursing facility",2025-02-20,confirmed_fraud
+CLM-2025-0267890,excessive_volume,"DME supplier billed for 500 wheelchairs to 200 patients in one month",2025-03-10,under_investigation

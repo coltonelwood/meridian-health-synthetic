@@ -1,0 +1,251 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="utf-8")
+    meta(http-equiv="X-UA-Compatible" content="IE=edge")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
+    meta(name="description" content="Meridian Health Technologies - Patient Portal")
+    meta(name="robots" content="noindex, nofollow")
+
+    title #{title} | Meridian Health Patient Portal
+
+    //- Bootstrap 3.3.7 - yes, we know it's old
+    link(rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous")
+    link(rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduY7hoddeiv63Hv8q65i+RPNNg42X3w" crossorigin="anonymous")
+
+    //- Font Awesome 4 for icons
+    link(rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css")
+
+    //- Custom portal styles
+    link(rel="stylesheet" href="/static/css/portal.css")
+
+    //- Favicon
+    link(rel="icon" type="image/png" href="/static/img/favicon.png")
+
+    //- CSRF token for AJAX requests
+    meta(name="csrf-token" content="#{csrfToken}")
+
+  body
+    //- Skip navigation for accessibility (one of the few a11y things we did)
+    a.sr-only.sr-only-focusable(href="#main-content") Skip to main content
+
+    //- Navigation
+    if user
+      nav.navbar.navbar-default.navbar-fixed-top
+        .container-fluid
+          .navbar-header
+            button.navbar-toggle.collapsed(type="button" data-toggle="collapse" data-target="#portal-nav" aria-expanded="false")
+              span.sr-only Toggle navigation
+              span.icon-bar
+              span.icon-bar
+              span.icon-bar
+            a.navbar-brand(href="/dashboard")
+              img(src="/static/img/meridian-logo.png" alt="Meridian Health" style="height: 30px; display: inline-block; margin-top: -5px;")
+              |  Patient Portal
+
+          #portal-nav.collapse.navbar-collapse
+            ul.nav.navbar-nav
+              li(class=(title === 'Dashboard' ? 'active' : ''))
+                a(href="/dashboard")
+                  i.fa.fa-dashboard
+                  |  Dashboard
+              li(class=(title === 'My Appointments' ? 'active' : ''))
+                a(href="/appointments")
+                  i.fa.fa-calendar
+                  |  Appointments
+              li(class=(title === 'My Claims' ? 'active' : ''))
+                a(href="/claims")
+                  i.fa.fa-file-text-o
+                  |  Claims & Billing
+              li(class=(title === 'Messages' ? 'active' : ''))
+                a(href="/messages")
+                  i.fa.fa-envelope-o
+                  |  Messages
+                  //- Unread badge - updated via polling (jQuery)
+                  span#unread-badge.badge(style="display:none;")
+              li(class=(title === 'My Medical Records' ? 'active' : ''))
+                a(href="/records")
+                  i.fa.fa-heartbeat
+                  |  Records
+
+            ul.nav.navbar-nav.navbar-right
+              li.dropdown
+                a.dropdown-toggle(href="#" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false")
+                  i.fa.fa-user-circle-o
+                  |  #{user.firstName} #{user.lastName}
+                  span.caret
+                ul.dropdown-menu
+                  li
+                    a(href="/profile")
+                      i.fa.fa-cog
+                      |  My Profile
+                  li
+                    a(href="/profile/change-password")
+                      i.fa.fa-lock
+                      |  Change Password
+                  li.divider(role="separator")
+                  li
+                    a(href="/logout")
+                      i.fa.fa-sign-out
+                      |  Sign Out
+
+    //- Deprecation banner (added May 2024)
+    .alert.alert-danger.text-center(style="margin-bottom: 0; border-radius: 0; position: fixed; top: 50px; width: 100%; z-index: 1000;")
+      strong
+        i.fa.fa-exclamation-triangle
+        |  This portal is being retired.
+      |  Please use the
+      a(href="https://portal.meridianhealth.io" style="color: #fff; text-decoration: underline;") new patient portal
+      | . This portal will be shut down on June 30, 2024.
+
+    //- Flash messages
+    .container-fluid(style="margin-top: 90px;")
+      if messages.success && messages.success.length
+        each msg in messages.success
+          .alert.alert-success.alert-dismissible(role="alert")
+            button.close(type="button" data-dismiss="alert" aria-label="Close")
+              span(aria-hidden="true") &times;
+            i.fa.fa-check-circle
+            |  #{msg}
+
+      if messages.error && messages.error.length
+        each msg in messages.error
+          .alert.alert-danger.alert-dismissible(role="alert")
+            button.close(type="button" data-dismiss="alert" aria-label="Close")
+              span(aria-hidden="true") &times;
+            i.fa.fa-exclamation-circle
+            |  #{msg}
+
+      if messages.warning && messages.warning.length
+        each msg in messages.warning
+          .alert.alert-warning.alert-dismissible(role="alert")
+            button.close(type="button" data-dismiss="alert" aria-label="Close")
+              span(aria-hidden="true") &times;
+            i.fa.fa-warning
+            |  #{msg}
+
+      if messages.info && messages.info.length
+        each msg in messages.info
+          .alert.alert-info.alert-dismissible(role="alert")
+            button.close(type="button" data-dismiss="alert" aria-label="Close")
+              span(aria-hidden="true") &times;
+            i.fa.fa-info-circle
+            |  #{msg}
+
+    //- Main content
+    #main-content.container-fluid
+      block content
+
+    //- Footer
+    footer.footer
+      .container-fluid
+        .row
+          .col-md-6
+            p.text-muted
+              | &copy; #{new Date().getFullYear()} Meridian Health Technologies, Inc.
+              br
+              | All rights reserved.
+              | &nbsp;|&nbsp;
+              a(href="/privacy") Privacy Policy
+              | &nbsp;|&nbsp;
+              a(href="/terms") Terms of Use
+              | &nbsp;|&nbsp;
+              a(href="/accessibility") Accessibility
+          .col-md-6.text-right
+            p.text-muted
+              | Need help? Call
+              strong  1-888-555-0147
+              br
+              | Monday - Friday, 8:00 AM - 6:00 PM ET
+
+    //- Session timeout warning modal
+    #session-timeout-modal.modal.fade(tabindex="-1" role="dialog")
+      .modal-dialog
+        .modal-content
+          .modal-header
+            h4.modal-title
+              i.fa.fa-clock-o
+              |  Session Expiring
+          .modal-body
+            p Your session will expire in #[span#timeout-countdown 60] seconds due to inactivity.
+            p Click "Continue" to extend your session.
+          .modal-footer
+            button.btn.btn-default(type="button" data-dismiss="modal" onclick="window.location.href='/logout'") Log Out
+            button#extend-session-btn.btn.btn-primary(type="button") Continue Session
+
+    //- jQuery 2.2.4 - needed for Bootstrap 3
+    //- NOTE: jQuery 2.x has known XSS vulnerabilities. We never upgraded
+    //- because we were already planning the migration to React.
+    script(src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous")
+
+    //- Bootstrap 3 JS
+    script(src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous")
+
+    //- Custom portal JavaScript
+    script.
+      $(document).ready(function() {
+        // Set up CSRF token for all AJAX requests
+        var csrfToken = $('meta[name="csrf-token"]').attr('content');
+        $.ajaxSetup({
+          headers: { 'X-CSRF-Token': csrfToken }
+        });
+
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function() {
+          $('.alert-success, .alert-info').fadeOut('slow');
+        }, 5000);
+
+        // Poll for notifications every 30 seconds
+        // Yes, we know polling is bad. WebSockets were "too complex" at the time.
+        if (#{user ? 'true' : 'false'}) {
+          setInterval(function() {
+            $.get('/api/notifications/count', function(data) {
+              if (data.unreadMessages > 0) {
+                $('#unread-badge').text(data.unreadMessages).show();
+              } else {
+                $('#unread-badge').hide();
+              }
+            });
+          }, 30000);
+        }
+
+        // Session timeout warning - show modal 60 seconds before expiry
+        // HIPAA requires auto-logout after 15 minutes of inactivity
+        var sessionTimeout = 15 * 60 * 1000; // 15 minutes
+        var warningTime = sessionTimeout - (60 * 1000); // 1 minute before
+        var sessionTimer, countdownTimer;
+
+        function resetSessionTimer() {
+          clearTimeout(sessionTimer);
+          clearTimeout(countdownTimer);
+          sessionTimer = setTimeout(function() {
+            var countdown = 60;
+            $('#timeout-countdown').text(countdown);
+            $('#session-timeout-modal').modal('show');
+            countdownTimer = setInterval(function() {
+              countdown--;
+              $('#timeout-countdown').text(countdown);
+              if (countdown <= 0) {
+                clearInterval(countdownTimer);
+                window.location.href = '/logout?reason=timeout';
+              }
+            }, 1000);
+          }, warningTime);
+        }
+
+        $('#extend-session-btn').click(function() {
+          $.get('/api/notifications/count'); // Simple request to extend session
+          $('#session-timeout-modal').modal('hide');
+          resetSessionTimer();
+        });
+
+        // Reset timer on any user activity
+        $(document).on('click keypress mousemove', function() {
+          resetSessionTimer();
+        });
+
+        resetSessionTimer();
+      });
+
+    //- Page-specific scripts
+    block scripts

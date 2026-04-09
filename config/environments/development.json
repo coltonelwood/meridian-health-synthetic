@@ -1,0 +1,184 @@
+{
+  "_environment": "development",
+  "_description": "Local development configuration. All URLs point to localhost services.",
+
+  "app": {
+    "name": "Meridian Health Platform",
+    "environment": "development",
+    "debug": true,
+    "log_level": "debug",
+    "log_format": "pretty"
+  },
+
+  "api_gateway": {
+    "url": "http://localhost:8000",
+    "admin_url": "http://localhost:8001",
+    "rate_limit": {
+      "enabled": false,
+      "requests_per_minute": 1000
+    },
+    "cors": {
+      "allowed_origins": ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002"],
+      "allowed_methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      "allowed_headers": ["*"]
+    }
+  },
+
+  "services": {
+    "auth": {
+      "url": "http://localhost:3011",
+      "jwt_expiry_minutes": 120,
+      "refresh_token_expiry_days": 30,
+      "password_reset_expiry_minutes": 60,
+      "mfa_enabled": false
+    },
+    "patient": {
+      "url": "http://localhost:3010",
+      "duplicate_detection": {
+        "enabled": true,
+        "threshold": 0.85
+      }
+    },
+    "scheduling": {
+      "url": "http://localhost:3013",
+      "default_timezone": "America/New_York",
+      "booking_window_days": 90,
+      "cancellation_window_hours": 2
+    },
+    "billing": {
+      "url": "http://localhost:3012",
+      "auto_claim_creation": true,
+      "self_pay_discount_pct": 40
+    },
+    "claims": {
+      "url": "http://localhost:3014",
+      "auto_submission": false,
+      "scrubbing_strict_mode": false
+    },
+    "documents": {
+      "url": "http://localhost:3015",
+      "virus_scan_enabled": false,
+      "max_file_size_mb": 50
+    },
+    "comms": {
+      "url": "http://localhost:3016",
+      "email_enabled": false,
+      "sms_enabled": false,
+      "push_enabled": false
+    },
+    "analytics": {
+      "url": "http://localhost:3017"
+    },
+    "audit": {
+      "url": "http://localhost:3018",
+      "log_to_console": true
+    },
+    "fhir": {
+      "url": "http://localhost:3019",
+      "base_url": "http://localhost:3019/r4"
+    },
+    "eligibility": {
+      "url": "http://localhost:3020",
+      "use_mock_responses": true
+    }
+  },
+
+  "database": {
+    "primary": {
+      "host": "localhost",
+      "port": 5432,
+      "database": "meridian_dev",
+      "username": "meridian",
+      "password": "meridian",
+      "pool_min": 2,
+      "pool_max": 10,
+      "ssl": false
+    },
+    "analytics": {
+      "host": "localhost",
+      "port": 5432,
+      "database": "meridian_analytics_dev",
+      "username": "meridian",
+      "password": "meridian",
+      "pool_min": 1,
+      "pool_max": 5,
+      "ssl": false
+    },
+    "mongodb": {
+      "uri": "mongodb://localhost:27017/meridian_dev",
+      "options": {}
+    }
+  },
+
+  "redis": {
+    "host": "localhost",
+    "port": 6379,
+    "password": null,
+    "tls": false,
+    "databases": {
+      "cache": 0,
+      "rate_limit": 1,
+      "sessions": 2,
+      "queues": 3
+    }
+  },
+
+  "rabbitmq": {
+    "url": "amqp://guest:guest@localhost:5672",
+    "management_url": "http://localhost:15672",
+    "prefetch_count": 10,
+    "retry_max_attempts": 3,
+    "retry_delay_ms": 1000
+  },
+
+  "aws": {
+    "region": "us-east-1",
+    "endpoint": "http://localhost:4566",
+    "s3": {
+      "documents_bucket": "meridian-documents-dev",
+      "statements_bucket": "meridian-statements-dev"
+    },
+    "kms": {
+      "key_id": "alias/meridian-dev-key"
+    }
+  },
+
+  "external_services": {
+    "clearinghouse": {
+      "provider": "change_healthcare",
+      "endpoint": "http://localhost:9090/mock-clearinghouse",
+      "use_mock": true
+    },
+    "eligibility": {
+      "provider": "availity",
+      "endpoint": "http://localhost:9091/mock-eligibility",
+      "use_mock": true
+    },
+    "stripe": {
+      "public_key": "pk_test_placeholder",
+      "webhook_secret": "whsec_test_placeholder"
+    },
+    "twilio": {
+      "use_mock": true
+    },
+    "sendgrid": {
+      "use_mock": true
+    }
+  },
+
+  "security": {
+    "encryption": {
+      "algorithm": "aes-256-gcm",
+      "at_rest_enabled": false
+    },
+    "hipaa": {
+      "audit_logging": true,
+      "session_timeout_minutes": 60,
+      "auto_logout_minutes": 60,
+      "phi_access_logging": true
+    }
+  },
+
+  "feature_flags_source": "local",
+  "feature_flags_file": "../feature-flags/flags.json"
+}

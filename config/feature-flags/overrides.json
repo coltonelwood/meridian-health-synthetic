@@ -1,0 +1,45 @@
+{
+  "_description": "Per-environment feature flag overrides. Values here take precedence over defaults in flags.json.",
+  "_updated": "2025-03-15",
+
+  "development": {
+    "_note": "In development, most flags are enabled for testing",
+    "enable_new_scheduling_ui": true,
+    "claims_auto_adjudication": true,
+    "fhir_bulk_export": true,
+    "patient_chat_beta": true,
+    "enhanced_eligibility_check": true,
+    "telehealth_zoom_integration": true,
+    "dark_mode": true,
+    "claims_anomaly_detection": true,
+    "patient_self_scheduling": true,
+    "enable_consent_service": true,
+    "provider_mobile_app": true,
+    "automated_prior_auth": true,
+    "v2_patient_search": true
+  },
+
+  "staging": {
+    "_note": "Staging mirrors production rollout percentages, with some flags enabled for testing",
+    "enable_new_scheduling_ui": true,
+    "claims_auto_adjudication": true,
+    "fhir_bulk_export": true,
+    "patient_chat_beta": true,
+    "enhanced_eligibility_check": true,
+    "telehealth_zoom_integration": true,
+    "dark_mode": false,
+    "claims_anomaly_detection": true,
+    "patient_self_scheduling": true,
+    "enable_consent_service": true,
+    "provider_mobile_app": false,
+    "automated_prior_auth": false,
+    "v2_patient_search": true
+  },
+
+  "production": {
+    "_note": "Production overrides are minimal - flags use their defined rollout_percentage",
+    "dark_mode": false,
+    "provider_mobile_app": false,
+    "automated_prior_auth": false
+  }
+}

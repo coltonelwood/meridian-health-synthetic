@@ -1,0 +1,118 @@
+# =============================================================================
+# CODEOWNERS - Meridian Health Platform
+# =============================================================================
+#
+# This file defines code ownership for automated review assignment.
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# When a PR modifies files matching a pattern, the corresponding team is
+# automatically added as a reviewer.
+#
+# NOTE: Order matters! Later rules take precedence over earlier ones.
+# NOTE: Teams must have write access to the repo for CODEOWNERS to work.
+#
+# Last reviewed: 2024-07-15 by @david.chen
+# TODO: Add the new referral-service ownership once the team is formed (PLAT-4100)
+# TODO: The @meridian/billing-team no longer exists -- clean up references
+# =============================================================================
+
+# ---- Default / Fallback ----
+# Platform Core owns everything not claimed by another team
+*                                       @meridian/platform-core
+
+# ---- Root Configuration ----
+# Infrastructure changes need infra review
+docker-compose*.yml                     @meridian/infra @meridian/platform-core
+Dockerfile                              @meridian/infra
+Makefile                                @meridian/platform-core
+package.json                            @meridian/platform-core
+tsconfig.json                           @meridian/platform-core
+.eslintrc*                              @meridian/platform-core
+jest.config.*                           @meridian/platform-core
+.github/                                @meridian/infra @meridian/platform-core
+
+# ---- Services ----
+
+# Auth service -- security-critical, requires platform-core review
+services/auth/                          @meridian/platform-core @meridian/security-reviewers
+
+# Claims processing
+services/claims-engine/                 @meridian/claims-team
+services/claims-engine/src/edi/         @meridian/claims-team @meridian/edi-specialists
+# ^^^ The EDI parsing code is gnarly. Only @rafael.g and @priya.p really understand it.
+#     We should document it better but in the meantime, they should review EDI changes.
+
+# EHR integration
+services/ehr-gateway/                   @meridian/integrations-team
+services/ehr-gateway/src/fhir/          @meridian/integrations-team @meridian/platform-core
+services/ehr-gateway/src/hl7v2/         @meridian/integrations-team
+
+# Scheduling
+services/scheduling/                    @meridian/patient-exp-team
+
+# Analytics
+services/analytics-api/                 @meridian/data-ml-team
+
+# Document service
+services/doc-service/                   @meridian/platform-core
+
+# Notifications
+services/notifications/                 @meridian/platform-core
+
+# DEPRECATED: billing service (merged into claims-engine)
+# services/billing/                     @meridian/billing-team
+# ^^^ This team was dissolved. Claims team absorbed the work.
+
+# ---- Shared Libraries ----
+
+libs/common/                            @meridian/platform-core
+libs/db/                                @meridian/platform-core
+libs/fhir-client/                       @meridian/integrations-team @meridian/platform-core
+libs/hipaa-audit/                       @meridian/platform-core @meridian/security-reviewers
+libs/api-client/                        @meridian/platform-core
+
+# ---- Infrastructure ----
+
+infra/                                  @meridian/infra
+infra/terraform/                        @meridian/infra
+infra/terraform/modules/rds/            @meridian/infra @meridian/platform-core
+infra/terraform/modules/eks/            @meridian/infra
+infra/k8s/                              @meridian/infra
+infra/k8s/charts/                       @meridian/infra
+
+# ---- ML / Data Science ----
+
+ml/                                     @meridian/ml-team
+ml/models/                              @meridian/ml-team
+ml/pipelines/                           @meridian/ml-team @meridian/data-ml-team
+experiments/                            @meridian/ml-team
+
+# ---- Scripts ----
+
+scripts/                                @meridian/platform-core
+scripts/deploy/                         @meridian/infra @meridian/platform-core
+scripts/db/                             @meridian/platform-core
+
+# ---- Configuration ----
+
+config/                                 @meridian/platform-core @meridian/infra
+
+# ---- Documentation ----
+
+docs/                                   @meridian/platform-core
+docs/compliance/                        @meridian/platform-core @meridian/security-reviewers
+docs/adr/                               @meridian/platform-core
+docs/runbooks/                          @meridian/infra @meridian/platform-core
+
+# ---- CI/CD ----
+
+.github/workflows/ci.yml               @meridian/platform-core @meridian/infra
+.github/workflows/deploy-*.yml         @meridian/infra
+
+# ---- Compliance-sensitive files ----
+# These require review from security-reviewers for HIPAA compliance
+
+*.env*                                  @meridian/security-reviewers @meridian/infra
+!.env.example
+HIPAA*                                  @meridian/security-reviewers
+**/migrations/**                        @meridian/platform-core

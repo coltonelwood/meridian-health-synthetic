@@ -1,0 +1,745 @@
+openapi: 3.0.3
+info:
+  title: Meridian Health - Claims API
+  description: |
+    API for healthcare claim creation, submission, tracking, and payment processing.
+
+    ## Claim Lifecycle
+    1. `draft` - Claim created but not validated
+    2. `submitted` - Claim validated and sent to clearinghouse
+    3. `accepted` - Acknowledged by clearinghouse
+    4. `rejected` - Rejected by clearinghouse (needs correction)
+    5. `adjudicated` - Payer has processed the claim
+    6. `paid` - Payment received and posted
+    7. `denied` - Payer denied the claim
+    8. `appealed` - Denial has been appealed
+
+    ## Authentication
+    Requires JWT Bearer token with `claims:read` or `claims:write` scope.
+
+    ## Rate Limits
+    - Read operations: 200 requests/minute
+    - Write operations: 50 requests/minute
+    - Batch operations: 5 requests/minute
+  version: 3.1.0
+  contact:
+    name: Revenue Cycle Team
+    email: revcycle@meridianhealth.io
+
+servers:
+  - url: https://api.meridianhealth.io/v2
+    description: Production
+  - url: https://api.staging.meridianhealth.io/v2
+    description: Staging
+
+tags:
+  - name: Claims
+    description: Claim CRUD operations
+  - name: Submission
+    description: Claim submission to clearinghouses
+  - name: Payments
+    description: Payment and ERA processing
+  - name: Reports
+    description: Claims reporting
+
+paths:
+  /claims:
+    get:
+      tags: [Claims]
+      summary: List claims
+      operationId: listClaims
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, submitted, accepted, rejected, adjudicated, paid, denied, appealed, all]
+        - name: patient_id
+          in: query
+          schema:
+            type: string
+        - name: provider_npi
+          in: query
+          schema:
+            type: string
+        - name: payer_id
+          in: query
+          schema:
+            type: string
+        - name: service_date_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: service_date_to
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: created_after
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [created_at, service_date, total_billed, status]
+            default: created_at
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: Paginated list of claims
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ClaimSummary'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+    post:
+      tags: [Claims]
+      summary: Create a new claim
+      description: Creates a claim in draft status. Must be submitted separately.
+      operationId: createClaim
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateClaimRequest'
+      responses:
+        '201':
+          description: Claim created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Claim'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /claims/{id}:
+    get:
+      tags: [Claims]
+      summary: Get claim details
+      operationId: getClaim
+      parameters:
+        - $ref: '#/components/parameters/ClaimId'
+      responses:
+        '200':
+          description: Claim details with line items and history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Claim'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Claims]
+      summary: Update a draft claim
+      description: Only claims in draft status can be updated.
+      operationId: updateClaim
+      parameters:
+        - $ref: '#/components/parameters/ClaimId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateClaimRequest'
+      responses:
+        '200':
+          description: Claim updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Claim'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          description: Claim is not in draft status
+
+  /claims/{id}/submit:
+    post:
+      tags: [Submission]
+      summary: Submit claim to clearinghouse
+      description: |
+        Validates the claim (scrubbing) and submits it to the appropriate clearinghouse.
+        The claim must be in `draft` or `rejected` (for resubmission) status.
+      operationId: submitClaim
+      parameters:
+        - $ref: '#/components/parameters/ClaimId'
+      responses:
+        '202':
+          description: Claim submitted for processing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  claim_id:
+                    type: string
+                  status:
+                    type: string
+                    example: submitted
+                  tracking_id:
+                    type: string
+                    description: Clearinghouse tracking number
+                  submitted_at:
+                    type: string
+                    format: date-time
+        '400':
+          description: Claim failed validation (scrubbing errors)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: validation_failed
+                  message:
+                    type: string
+                  scrubbing_errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          type: string
+                        field:
+                          type: string
+                        message:
+                          type: string
+                        severity:
+                          type: string
+                          enum: [error, warning]
+        '409':
+          description: Claim is not in a submittable status
+
+  /claims/{id}/void:
+    post:
+      tags: [Claims]
+      summary: Void a claim
+      description: Voids a submitted claim. Sends a void request to the clearinghouse.
+      operationId: voidClaim
+      parameters:
+        - $ref: '#/components/parameters/ClaimId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+                  maxLength: 500
+      responses:
+        '200':
+          description: Claim voided
+        '409':
+          description: Claim cannot be voided in its current status
+
+  /claims/{id}/appeal:
+    post:
+      tags: [Claims]
+      summary: Appeal a denied claim
+      description: Creates an appeal for a denied claim with supporting documentation.
+      operationId: appealClaim
+      parameters:
+        - $ref: '#/components/parameters/ClaimId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason, supporting_documents]
+              properties:
+                reason:
+                  type: string
+                  maxLength: 2000
+                appeal_level:
+                  type: string
+                  enum: [first, second, external]
+                  default: first
+                supporting_documents:
+                  type: array
+                  items:
+                    type: string
+                    description: Document IDs from the documents service
+      responses:
+        '201':
+          description: Appeal created
+        '409':
+          description: Claim is not in denied status
+
+  /claims/batch/submit:
+    post:
+      tags: [Submission]
+      summary: Batch submit claims
+      description: Submit multiple claims at once. Returns immediately with a batch tracking ID.
+      operationId: batchSubmitClaims
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [claim_ids]
+              properties:
+                claim_ids:
+                  type: array
+                  maxItems: 500
+                  items:
+                    type: string
+      responses:
+        '202':
+          description: Batch accepted for processing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  batch_id:
+                    type: string
+                  total_claims:
+                    type: integer
+                  status:
+                    type: string
+                    example: processing
+
+  /claims/batch/{batchId}/status:
+    get:
+      tags: [Submission]
+      summary: Get batch submission status
+      operationId: getBatchStatus
+      parameters:
+        - name: batchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Batch status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  batch_id:
+                    type: string
+                  status:
+                    type: string
+                    enum: [processing, completed, partial_failure]
+                  total:
+                    type: integer
+                  submitted:
+                    type: integer
+                  failed:
+                    type: integer
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        claim_id:
+                          type: string
+                        error:
+                          type: string
+
+  /payments/era:
+    post:
+      tags: [Payments]
+      summary: Process ERA/835 remittance
+      description: |
+        Accepts an ERA/835 file (or parsed JSON) and posts payments to the matching claims.
+        This endpoint is typically called by the clearinghouse integration service.
+      operationId: processERA
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ERAData'
+      responses:
+        '202':
+          description: ERA accepted for processing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  era_id:
+                    type: string
+                  claims_matched:
+                    type: integer
+                  claims_unmatched:
+                    type: integer
+                  total_payment:
+                    type: number
+
+  /reports/aging:
+    get:
+      tags: [Reports]
+      summary: Get accounts receivable aging report
+      operationId: getAgingReport
+      parameters:
+        - name: as_of_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: payer_id
+          in: query
+          schema:
+            type: string
+        - name: provider_npi
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: AR aging report
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  as_of_date:
+                    type: string
+                    format: date
+                  buckets:
+                    type: object
+                    properties:
+                      current:
+                        type: number
+                      days_31_60:
+                        type: number
+                      days_61_90:
+                        type: number
+                      days_91_120:
+                        type: number
+                      over_120:
+                        type: number
+                      total:
+                        type: number
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    ClaimId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Claim ID (e.g., CLM-2024-000001)
+
+  schemas:
+    Claim:
+      type: object
+      properties:
+        claim_id:
+          type: string
+        claim_type:
+          type: string
+        claim_status:
+          type: string
+        patient_id:
+          type: string
+        patient_mrn:
+          type: string
+        patient_name:
+          type: object
+          properties:
+            first:
+              type: string
+            last:
+              type: string
+        payer:
+          type: object
+          properties:
+            payer_id:
+              type: string
+            payer_name:
+              type: string
+            plan_name:
+              type: string
+        rendering_provider:
+          type: object
+          properties:
+            npi:
+              type: string
+            name:
+              type: string
+        service_date:
+          type: string
+          format: date
+        diagnosis_codes:
+          type: array
+          items:
+            type: object
+            properties:
+              sequence:
+                type: integer
+              code:
+                type: string
+              description:
+                type: string
+        line_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineItem'
+        totals:
+          type: object
+          properties:
+            total_billed:
+              type: number
+            total_allowed:
+              type: number
+            total_paid:
+              type: number
+            total_adjustment:
+              type: number
+            total_patient_responsibility:
+              type: number
+        created_at:
+          type: string
+          format: date-time
+        submitted_at:
+          type: string
+          format: date-time
+        history:
+          type: array
+          items:
+            type: object
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+              action:
+                type: string
+              user:
+                type: string
+              details:
+                type: string
+
+    ClaimSummary:
+      type: object
+      properties:
+        claim_id:
+          type: string
+        claim_status:
+          type: string
+        patient_mrn:
+          type: string
+        patient_name:
+          type: string
+        payer_name:
+          type: string
+        service_date:
+          type: string
+          format: date
+        total_billed:
+          type: number
+        total_paid:
+          type: number
+        created_at:
+          type: string
+          format: date-time
+
+    LineItem:
+      type: object
+      properties:
+        line_number:
+          type: integer
+        cpt_code:
+          type: string
+        modifiers:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        units:
+          type: number
+        billed_amount:
+          type: number
+        allowed_amount:
+          type: number
+        paid_amount:
+          type: number
+        adjustment_amount:
+          type: number
+        patient_responsibility:
+          type: number
+        status:
+          type: string
+
+    CreateClaimRequest:
+      type: object
+      required: [patient_id, payer_id, rendering_provider_npi, service_date, diagnosis_codes, line_items]
+      properties:
+        patient_id:
+          type: string
+        payer_id:
+          type: string
+        rendering_provider_npi:
+          type: string
+        facility_npi:
+          type: string
+        service_date:
+          type: string
+          format: date
+        prior_authorization_number:
+          type: string
+        referral_number:
+          type: string
+        diagnosis_codes:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [code]
+            properties:
+              code:
+                type: string
+        line_items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [cpt_code, units, billed_amount]
+            properties:
+              cpt_code:
+                type: string
+              modifiers:
+                type: array
+                items:
+                  type: string
+              units:
+                type: number
+                minimum: 1
+              billed_amount:
+                type: number
+                minimum: 0
+
+    UpdateClaimRequest:
+      type: object
+      properties:
+        diagnosis_codes:
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+        line_items:
+          type: array
+          items:
+            type: object
+        prior_authorization_number:
+          type: string
+        referral_number:
+          type: string
+        notes:
+          type: string
+
+    ERAData:
+      type: object
+      description: Parsed ERA/835 remittance data
+      properties:
+        transaction_id:
+          type: string
+        payment_method:
+          type: string
+          enum: [check, ach]
+        payment_date:
+          type: string
+          format: date
+        payment_amount:
+          type: number
+        payer_id:
+          type: string
+        claims:
+          type: array
+          items:
+            type: object
+            properties:
+              claim_id:
+                type: string
+              total_paid:
+                type: number
+              adjustments:
+                type: array
+                items:
+                  type: object
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        total_pages:
+          type: integer
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+
+  responses:
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+security:
+  - bearerAuth: []

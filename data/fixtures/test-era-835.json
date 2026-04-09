@@ -1,0 +1,146 @@
+{
+  "_comment": "Test fixture representing ERA/835 remittance advice data in JSON format. In production, 835 files are EDI X12 format and parsed into this structure.",
+  "_format": "Simplified representation of ANSI X12 835 Health Care Claim Payment/Advice",
+  "remittance": {
+    "transaction_id": "ERA-2024-000001",
+    "check_or_eft_number": "7890123456",
+    "payment_method": "ACH",
+    "payment_date": "2024-11-01",
+    "payment_amount": 156.83,
+    "payer": {
+      "payer_id": "AETN",
+      "payer_name": "Aetna",
+      "address": {
+        "street1": "PO Box 14079",
+        "city": "Lexington",
+        "state": "KY",
+        "zip": "40512"
+      },
+      "contact_phone": "1-800-872-3862",
+      "payer_identifier": "60054"
+    },
+    "payee": {
+      "name": "Meridian Health Technologies",
+      "npi": "1111111111",
+      "tax_id": "04-1234567",
+      "address": {
+        "street1": "123 Healthcare Drive",
+        "street2": "Suite 400",
+        "city": "Boston",
+        "state": "MA",
+        "zip": "02101"
+      }
+    },
+    "claims": [
+      {
+        "claim_id": "CLM-2024-000001",
+        "patient_control_number": "CLM-2024-000001",
+        "patient_name": {
+          "first": "James",
+          "last": "Okafor"
+        },
+        "member_id": "W123456789",
+        "claim_status": "paid",
+        "claim_status_code": "1",
+        "total_billed": 290.00,
+        "total_allowed": 206.83,
+        "total_paid": 156.83,
+        "total_patient_responsibility": 50.00,
+        "total_contractual_adjustment": 83.17,
+        "service_date_start": "2024-10-15",
+        "service_date_end": "2024-10-15",
+        "line_items": [
+          {
+            "line_number": 1,
+            "cpt_code": "99214",
+            "modifiers": ["25"],
+            "billed_amount": 225.00,
+            "allowed_amount": 168.50,
+            "paid_amount": 118.50,
+            "patient_responsibility": 50.00,
+            "units_billed": 1,
+            "units_paid": 1,
+            "adjustments": [
+              {
+                "group_code": "CO",
+                "reason_code": "45",
+                "reason_description": "Charge exceeds fee schedule/maximum allowable or contracted/legislated fee arrangement",
+                "amount": 56.50
+              }
+            ],
+            "patient_adjustments": [
+              {
+                "group_code": "PR",
+                "reason_code": "3",
+                "reason_description": "Co-payment amount",
+                "amount": 30.00
+              },
+              {
+                "group_code": "PR",
+                "reason_code": "2",
+                "reason_description": "Coinsurance amount",
+                "amount": 20.00
+              }
+            ],
+            "remark_codes": []
+          },
+          {
+            "line_number": 2,
+            "cpt_code": "85025",
+            "modifiers": [],
+            "billed_amount": 35.00,
+            "allowed_amount": 15.33,
+            "paid_amount": 15.33,
+            "patient_responsibility": 0.00,
+            "units_billed": 1,
+            "units_paid": 1,
+            "adjustments": [
+              {
+                "group_code": "CO",
+                "reason_code": "45",
+                "reason_description": "Charge exceeds fee schedule/maximum allowable",
+                "amount": 19.67
+              }
+            ],
+            "patient_adjustments": [],
+            "remark_codes": [
+              {
+                "code": "N362",
+                "description": "The patient has met their deductible for this service category"
+              }
+            ]
+          },
+          {
+            "line_number": 3,
+            "cpt_code": "87880",
+            "modifiers": [],
+            "billed_amount": 30.00,
+            "allowed_amount": 23.00,
+            "paid_amount": 23.00,
+            "patient_responsibility": 0.00,
+            "units_billed": 1,
+            "units_paid": 1,
+            "adjustments": [
+              {
+                "group_code": "CO",
+                "reason_code": "45",
+                "reason_description": "Charge exceeds fee schedule/maximum allowable",
+                "amount": 7.00
+              }
+            ],
+            "patient_adjustments": [],
+            "remark_codes": []
+          }
+        ]
+      }
+    ],
+    "provider_adjustments": [],
+    "financial_summary": {
+      "total_billed_all_claims": 290.00,
+      "total_allowed_all_claims": 206.83,
+      "total_paid_all_claims": 156.83,
+      "total_patient_responsibility_all_claims": 50.00,
+      "total_contractual_adjustment_all_claims": 83.17
+    }
+  }
+}

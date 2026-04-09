@@ -1,0 +1,172 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://meridianhealth.io/schemas/claim.json",
+  "title": "Claim",
+  "description": "Schema for healthcare claims in the Meridian Health system.",
+  "type": "object",
+  "required": ["claim_id", "claim_type", "claim_status", "patient_id", "payer", "rendering_provider", "service_date", "diagnosis_codes", "line_items"],
+  "properties": {
+    "claim_id": {
+      "type": "string",
+      "pattern": "^CLM-\\d{4}-\\d{6}$",
+      "description": "Unique claim identifier"
+    },
+    "claim_type": {
+      "type": "string",
+      "enum": ["professional", "institutional", "dental"],
+      "description": "Type of claim form (CMS-1500 vs UB-04)"
+    },
+    "claim_status": {
+      "type": "string",
+      "enum": ["draft", "submitted", "accepted", "rejected", "pending", "adjudicated", "paid", "denied", "appealed", "voided"],
+      "description": "Current status in the claim lifecycle"
+    },
+    "patient_id": { "type": "string" },
+    "patient_mrn": { "type": "string" },
+    "patient_name": {
+      "type": "object",
+      "properties": {
+        "first": { "type": "string" },
+        "last": { "type": "string" }
+      },
+      "required": ["first", "last"]
+    },
+    "patient_dob": { "type": "string", "format": "date" },
+    "subscriber": {
+      "type": "object",
+      "properties": {
+        "member_id": { "type": "string" },
+        "group_number": { "type": ["string", "null"] },
+        "relationship_to_patient": {
+          "type": "string",
+          "enum": ["self", "spouse", "child", "other"]
+        }
+      },
+      "required": ["member_id", "relationship_to_patient"]
+    },
+    "payer": {
+      "type": "object",
+      "required": ["payer_id", "payer_name"],
+      "properties": {
+        "payer_id": { "type": "string" },
+        "payer_name": { "type": "string" },
+        "plan_name": { "type": ["string", "null"] },
+        "plan_type": {
+          "type": ["string", "null"],
+          "enum": ["HMO", "PPO", "EPO", "POS", "HDHP", "Medicare", "Medicaid", null]
+        },
+        "address": { "$ref": "#/$defs/address" }
+      }
+    },
+    "rendering_provider": {
+      "type": "object",
+      "required": ["npi", "name"],
+      "properties": {
+        "npi": { "type": "string", "pattern": "^\\d{10}$" },
+        "name": { "type": "string" },
+        "taxonomy_code": { "type": ["string", "null"] },
+        "tax_id": { "type": ["string", "null"] }
+      }
+    },
+    "facility": {
+      "type": ["object", "null"],
+      "properties": {
+        "name": { "type": "string" },
+        "npi": { "type": "string" },
+        "address": { "$ref": "#/$defs/address" },
+        "place_of_service_code": { "type": "string", "pattern": "^\\d{2}$" }
+      }
+    },
+    "service_date": { "type": "string", "format": "date" },
+    "admission_date": { "type": ["string", "null"], "format": "date" },
+    "discharge_date": { "type": ["string", "null"], "format": "date" },
+    "prior_authorization_number": { "type": ["string", "null"] },
+    "referral_number": { "type": ["string", "null"] },
+    "diagnosis_codes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "required": ["sequence", "code"],
+        "properties": {
+          "sequence": { "type": "integer", "minimum": 1 },
+          "code": { "type": "string", "description": "ICD-10-CM code" },
+          "description": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "line_items": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/lineItem" }
+    },
+    "totals": {
+      "type": "object",
+      "properties": {
+        "total_billed": { "type": "number", "minimum": 0 },
+        "total_allowed": { "type": ["number", "null"] },
+        "total_paid": { "type": ["number", "null"] },
+        "total_adjustment": { "type": ["number", "null"] },
+        "total_patient_responsibility": { "type": ["number", "null"] }
+      }
+    },
+    "filing_indicator": {
+      "type": ["string", "null"],
+      "description": "SBR09 filing indicator code (CI=Commercial, MB=Medicare, MC=Medicaid)"
+    },
+    "assignment_of_benefits": { "type": "boolean" },
+    "release_of_information": { "type": "boolean" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "submitted_at": { "type": ["string", "null"], "format": "date-time" },
+    "adjudicated_at": { "type": ["string", "null"], "format": "date-time" },
+    "paid_at": { "type": ["string", "null"], "format": "date-time" },
+    "created_by": { "type": "string" },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "$defs": {
+    "address": {
+      "type": "object",
+      "properties": {
+        "street1": { "type": "string" },
+        "street2": { "type": ["string", "null"] },
+        "city": { "type": "string" },
+        "state": { "type": "string" },
+        "zip": { "type": "string" }
+      }
+    },
+    "lineItem": {
+      "type": "object",
+      "required": ["line_number", "cpt_code", "service_date", "units", "billed_amount"],
+      "properties": {
+        "line_number": { "type": "integer", "minimum": 1 },
+        "cpt_code": { "type": "string", "pattern": "^[0-9A-Z]{5}$" },
+        "modifiers": {
+          "type": "array",
+          "maxItems": 4,
+          "items": { "type": "string", "pattern": "^[0-9A-Z]{2}$" }
+        },
+        "description": { "type": ["string", "null"] },
+        "diagnosis_pointers": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 1 }
+        },
+        "service_date": { "type": "string", "format": "date" },
+        "place_of_service": { "type": "string", "pattern": "^\\d{2}$" },
+        "units": { "type": "number", "minimum": 0 },
+        "billed_amount": { "type": "number", "minimum": 0 },
+        "allowed_amount": { "type": ["number", "null"] },
+        "paid_amount": { "type": ["number", "null"] },
+        "adjustment_amount": { "type": ["number", "null"] },
+        "patient_responsibility": { "type": ["number", "null"] },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "paid", "denied", "adjusted"]
+        }
+      }
+    }
+  }
+}

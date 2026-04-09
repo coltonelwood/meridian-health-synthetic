@@ -1,0 +1,38 @@
+{
+  "name": "@meridian-internal/report-generator",
+  "version": "2.1.0",
+  "private": true,
+  "description": "Report generation tool for Meridian Health Technologies",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "ts-node src/index.ts",
+    "report:claims": "ts-node src/index.ts claims",
+    "report:census": "ts-node src/index.ts census",
+    "report:revenue": "ts-node src/index.ts revenue",
+    "report:compliance": "ts-node src/index.ts compliance",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "dependencies": {
+    "pg": "^8.11.3",
+    "exceljs": "^4.4.0",
+    "pdfmake": "^0.2.8",
+    "handlebars": "^4.7.8",
+    "commander": "^11.1.0",
+    "chalk": "^4.1.2",
+    "date-fns": "^2.30.0",
+    "ora": "^5.4.1",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.10.9",
+    "@types/node": "^20.10.4",
+    "@types/pdfmake": "^0.2.8",
+    "typescript": "^5.3.2",
+    "ts-node": "^10.9.2",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "@types/jest": "^29.5.11"
+  }
+}

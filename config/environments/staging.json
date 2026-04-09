@@ -1,0 +1,188 @@
+{
+  "_environment": "staging",
+  "_description": "Staging environment configuration. Points to staging infrastructure in AWS.",
+
+  "app": {
+    "name": "Meridian Health Platform",
+    "environment": "staging",
+    "debug": false,
+    "log_level": "info",
+    "log_format": "json"
+  },
+
+  "api_gateway": {
+    "url": "https://api.staging.meridianhealth.io",
+    "rate_limit": {
+      "enabled": true,
+      "requests_per_minute": 200
+    },
+    "cors": {
+      "allowed_origins": [
+        "https://portal.staging.meridianhealth.io",
+        "https://provider.staging.meridianhealth.io",
+        "https://admin.staging.meridianhealth.io"
+      ],
+      "allowed_methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      "allowed_headers": ["Authorization", "Content-Type", "X-Request-ID", "X-Correlation-ID"]
+    }
+  },
+
+  "services": {
+    "auth": {
+      "url": "http://auth-service.staging.svc.cluster.local:3011",
+      "jwt_expiry_minutes": 30,
+      "refresh_token_expiry_days": 7,
+      "password_reset_expiry_minutes": 30,
+      "mfa_enabled": true
+    },
+    "patient": {
+      "url": "http://patient-service.staging.svc.cluster.local:3010",
+      "duplicate_detection": {
+        "enabled": true,
+        "threshold": 0.90
+      }
+    },
+    "scheduling": {
+      "url": "http://scheduling-service.staging.svc.cluster.local:3013",
+      "default_timezone": "America/New_York",
+      "booking_window_days": 90,
+      "cancellation_window_hours": 12
+    },
+    "billing": {
+      "url": "http://billing-service.staging.svc.cluster.local:3012",
+      "auto_claim_creation": true,
+      "self_pay_discount_pct": 40
+    },
+    "claims": {
+      "url": "http://claims-service.staging.svc.cluster.local:3014",
+      "auto_submission": true,
+      "scrubbing_strict_mode": true
+    },
+    "documents": {
+      "url": "http://documents-service.staging.svc.cluster.local:3015",
+      "virus_scan_enabled": true,
+      "max_file_size_mb": 25
+    },
+    "comms": {
+      "url": "http://comms-service.staging.svc.cluster.local:3016",
+      "email_enabled": true,
+      "sms_enabled": false,
+      "push_enabled": false
+    },
+    "analytics": {
+      "url": "http://analytics-service.staging.svc.cluster.local:3017"
+    },
+    "audit": {
+      "url": "http://audit-service.staging.svc.cluster.local:3018",
+      "log_to_console": false
+    },
+    "fhir": {
+      "url": "http://fhir-facade.staging.svc.cluster.local:3019",
+      "base_url": "https://fhir.staging.meridianhealth.io/r4"
+    },
+    "eligibility": {
+      "url": "http://eligibility-service.staging.svc.cluster.local:3020",
+      "use_mock_responses": false
+    }
+  },
+
+  "database": {
+    "primary": {
+      "host": "meridian-staging.cluster-xxxx.us-east-1.rds.amazonaws.com",
+      "port": 5432,
+      "database": "meridian_staging",
+      "username": "<<AWS_SECRETS_MANAGER>>",
+      "password": "<<AWS_SECRETS_MANAGER>>",
+      "pool_min": 5,
+      "pool_max": 20,
+      "ssl": true
+    },
+    "analytics": {
+      "host": "meridian-staging-analytics.cluster-xxxx.us-east-1.rds.amazonaws.com",
+      "port": 5432,
+      "database": "meridian_analytics_staging",
+      "username": "<<AWS_SECRETS_MANAGER>>",
+      "password": "<<AWS_SECRETS_MANAGER>>",
+      "pool_min": 2,
+      "pool_max": 10,
+      "ssl": true
+    },
+    "mongodb": {
+      "uri": "<<AWS_SECRETS_MANAGER>>",
+      "options": {
+        "tls": true,
+        "retryWrites": true,
+        "w": "majority"
+      }
+    }
+  },
+
+  "redis": {
+    "host": "meridian-staging.xxxx.use1.cache.amazonaws.com",
+    "port": 6379,
+    "password": "<<AWS_SECRETS_MANAGER>>",
+    "tls": true,
+    "databases": {
+      "cache": 0,
+      "rate_limit": 1,
+      "queues": 3
+    }
+  },
+
+  "rabbitmq": {
+    "url": "<<AWS_SECRETS_MANAGER>>",
+    "prefetch_count": 20,
+    "retry_max_attempts": 5,
+    "retry_delay_ms": 2000
+  },
+
+  "aws": {
+    "region": "us-east-1",
+    "s3": {
+      "documents_bucket": "meridian-documents-staging",
+      "statements_bucket": "meridian-statements-staging"
+    },
+    "kms": {
+      "key_id": "alias/meridian-staging-key"
+    }
+  },
+
+  "external_services": {
+    "clearinghouse": {
+      "provider": "change_healthcare",
+      "endpoint": "https://sandbox.changehealthcare.com/api/v1",
+      "use_mock": false
+    },
+    "eligibility": {
+      "provider": "availity",
+      "endpoint": "https://sandbox.availity.com/api/v1",
+      "use_mock": false
+    },
+    "stripe": {
+      "public_key": "pk_test_xxxx",
+      "webhook_secret": "<<AWS_SECRETS_MANAGER>>"
+    },
+    "twilio": {
+      "use_mock": true
+    },
+    "sendgrid": {
+      "use_mock": false
+    }
+  },
+
+  "security": {
+    "encryption": {
+      "algorithm": "aes-256-gcm",
+      "at_rest_enabled": true
+    },
+    "hipaa": {
+      "audit_logging": true,
+      "session_timeout_minutes": 30,
+      "auto_logout_minutes": 15,
+      "phi_access_logging": true
+    }
+  },
+
+  "feature_flags_source": "remote",
+  "feature_flags_endpoint": "http://feature-flags.staging.svc.cluster.local:8080/api/flags"
+}

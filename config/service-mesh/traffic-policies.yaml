@@ -1,0 +1,193 @@
+# Traffic Management Policies
+# Meridian Health Technologies
+#
+# Canary deployment weights and traffic routing rules.
+# Used by ArgoCD Rollouts for gradual rollouts of new service versions.
+#
+# Last updated: 2025-03
+# Owner: Platform Team
+
+---
+# Canary rollout for patient-service
+# New versions roll out 10% -> 25% -> 50% -> 75% -> 100%
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: patient-service-canary
+  namespace: production
+  labels:
+    app: patient-service
+    managed-by: argo-rollouts
+spec:
+  hosts:
+    - patient-service.production.svc.cluster.local
+  http:
+    - route:
+        - destination:
+            host: patient-service.production.svc.cluster.local
+            subset: stable
+          weight: 100
+        - destination:
+            host: patient-service.production.svc.cluster.local
+            subset: canary
+          weight: 0
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: patient-service-subsets
+  namespace: production
+spec:
+  host: patient-service.production.svc.cluster.local
+  subsets:
+    - name: stable
+      labels:
+        rollouts-pod-template-hash: stable
+    - name: canary
+      labels:
+        rollouts-pod-template-hash: canary
+
+---
+# Canary rollout for scheduling-service
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: scheduling-service-canary
+  namespace: production
+  labels:
+    app: scheduling-service
+    managed-by: argo-rollouts
+spec:
+  hosts:
+    - scheduling-service.production.svc.cluster.local
+  http:
+    - route:
+        - destination:
+            host: scheduling-service.production.svc.cluster.local
+            subset: stable
+          weight: 100
+        - destination:
+            host: scheduling-service.production.svc.cluster.local
+            subset: canary
+          weight: 0
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: scheduling-service-subsets
+  namespace: production
+spec:
+  host: scheduling-service.production.svc.cluster.local
+  subsets:
+    - name: stable
+      labels:
+        rollouts-pod-template-hash: stable
+    - name: canary
+      labels:
+        rollouts-pod-template-hash: canary
+
+---
+# Canary rollout for claims-service
+# Claims is more conservative: 5% -> 10% -> 25% -> 50% -> 100%
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: claims-service-canary
+  namespace: production
+  labels:
+    app: claims-service
+    managed-by: argo-rollouts
+  annotations:
+    rollout-strategy: conservative
+    approval-required: "true"
+spec:
+  hosts:
+    - claims-service.production.svc.cluster.local
+  http:
+    - route:
+        - destination:
+            host: claims-service.production.svc.cluster.local
+            subset: stable
+          weight: 100
+        - destination:
+            host: claims-service.production.svc.cluster.local
+            subset: canary
+          weight: 0
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: claims-service-subsets
+  namespace: production
+spec:
+  host: claims-service.production.svc.cluster.local
+  subsets:
+    - name: stable
+      labels:
+        rollouts-pod-template-hash: stable
+    - name: canary
+      labels:
+        rollouts-pod-template-hash: canary
+
+---
+# Header-based routing for QA testing
+# Allows QA to test canary versions by setting a header
+# Usage: curl -H "X-Canary: true" https://api.meridianhealth.io/...
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: canary-header-routing
+  namespace: production
+  annotations:
+    description: "Routes requests with X-Canary header to canary versions"
+spec:
+  hosts:
+    - "*.production.svc.cluster.local"
+  http:
+    - match:
+        - headers:
+            x-canary:
+              exact: "true"
+      route:
+        - destination:
+            host: patient-service.production.svc.cluster.local
+            subset: canary
+    - route:
+        - destination:
+            host: patient-service.production.svc.cluster.local
+            subset: stable
+
+---
+# Rate limiting for external-facing FHIR endpoints
+# Payer bulk data requests are rate-limited more aggressively
+apiVersion: networking.istio.io/v1beta1
+kind: EnvoyFilter
+metadata:
+  name: fhir-rate-limit
+  namespace: production
+spec:
+  workloadSelector:
+    labels:
+      app: fhir-facade
+  configPatches:
+    - applyTo: HTTP_FILTER
+      match:
+        context: SIDECAR_INBOUND
+        listener:
+          filterChain:
+            filter:
+              name: envoy.filters.network.http_connection_manager
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: envoy.filters.http.local_ratelimit
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+            stat_prefix: fhir_rate_limit
+            token_bucket:
+              max_tokens: 100
+              tokens_per_fill: 50
+              fill_interval: 60s

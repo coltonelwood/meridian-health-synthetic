@@ -1,0 +1,340 @@
+# =============================================================================
+# CI Pipeline - Meridian Health Platform
+# =============================================================================
+#
+# Runs on all PRs and pushes to main/develop.
+#
+# NOTE: This workflow was migrated from Bamboo in Jan 2024. Some steps still
+#       have workarounds from the migration. See PLAT-3200.
+#
+# TODO: Add matrix strategy for testing against multiple Node versions (PLAT-4300)
+# TODO: The integration tests are flaky -- about 1 in 10 runs fail due to
+#       Postgres connection race conditions. We added retry logic but should
+#       fix the root cause. (PLAT-3567)
+# FIXME: The Docker layer caching doesn't work well with our multi-stage builds.
+#        Build times are ~12min when they should be ~5min. (PLAT-4120)
+
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '18.19.0'
+  PYTHON_VERSION: '3.11'
+  # Disable Husky in CI
+  HUSKY: 0
+
+jobs:
+  # ---- Lint & Type Check ----
+  lint:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build shared libraries
+        run: npm run build:libs
+
+      - name: Run ESLint
+        run: npm run lint
+        # TODO: Remove continue-on-error once we fix the remaining lint warnings
+        # There are ~45 warnings, mostly in claims-engine (PLAT-3991)
+        continue-on-error: true
+
+      - name: TypeScript type check
+        run: npm run typecheck
+
+      - name: Check formatting
+        run: npm run format:check
+        continue-on-error: true
+        # ^^^ Formatting check fails on ~20 files. We'll fix them incrementally.
+
+  # ---- Unit Tests ----
+  test-unit:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build shared libraries
+        run: npm run build:libs
+
+      - name: Run unit tests
+        run: npm run test:unit -- --ci --forceExit --maxWorkers=2
+        env:
+          CI: true
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-unit
+          path: coverage/
+          retention-days: 7
+
+      # TODO: Re-enable Codecov upload once we fix the token (PLAT-4001)
+      # - name: Upload to Codecov
+      #   uses: codecov/codecov-action@v3
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }}
+      #     flags: unit
+
+  # ---- Integration Tests ----
+  test-integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:15.4-alpine
+        env:
+          POSTGRES_USER: meridian
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: meridian_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7.2-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      rabbitmq:
+        image: rabbitmq:3.12-alpine
+        ports:
+          - 5672:5672
+        env:
+          RABBITMQ_DEFAULT_USER: meridian
+          RABBITMQ_DEFAULT_PASS: test_password
+
+      # TODO: Add Elasticsearch service container for audit log integration tests
+      # It's too resource-heavy for GitHub Actions free tier. We might need larger runners.
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build shared libraries
+        run: npm run build:libs
+
+      - name: Create test databases
+        run: |
+          PGPASSWORD=test_password psql -h localhost -U meridian -d meridian_test -c "
+            CREATE DATABASE meridian_auth_test;
+            CREATE DATABASE meridian_claims_test;
+            CREATE DATABASE meridian_scheduling_test;
+            CREATE DATABASE meridian_ehr_test;
+            CREATE DATABASE meridian_analytics_test;
+            CREATE DATABASE meridian_docs_test;
+            CREATE DATABASE meridian_notifications_test;
+          "
+
+      - name: Run migrations
+        run: npm run db:migrate -- --env=test
+        env:
+          DATABASE_URL: postgres://meridian:test_password@localhost:5432/meridian_test
+
+      - name: Run integration tests
+        run: npm run test:integration -- --ci --forceExit --maxWorkers=1 --retries=2
+        env:
+          CI: true
+          DATABASE_URL: postgres://meridian:test_password@localhost:5432/meridian_test
+          REDIS_URL: redis://localhost:6379
+          RABBITMQ_URL: amqp://meridian:test_password@localhost:5672
+          LOG_LEVEL: error
+          HIPAA_AUDIT_ENABLED: false
+          NODE_ENV: test
+
+  # ---- Security Scan ----
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        run: npm audit --production --audit-level=high
+        continue-on-error: true
+        # TODO: Fix the 3 high-severity vulnerabilities (PLAT-4500)
+        # They're in transitive deps that we can't easily upgrade
+
+      # - name: Run Snyk
+      #   uses: snyk/actions/node@master
+      #   with:
+      #     args: --severity-threshold=high
+      #   env:
+      #     SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      # ^^^ Snyk license expired in Dec 2024. Renewal is pending (SEC-200).
+      #     Using npm audit as a stopgap.
+
+      - name: Check for secrets in code
+        uses: trufflesecurity/trufflehog@main
+        with:
+          extra_args: --only-verified
+
+  # ---- Build Docker Images ----
+  build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [lint, test-unit]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+
+    strategy:
+      matrix:
+        service:
+          - auth
+          - claims-engine
+          - ehr-gateway
+          - scheduling
+          - analytics-api
+          - doc-service
+          - notifications
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ matrix.service }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-${{ matrix.service }}-
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: services/${{ matrix.service }}/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/meridian/${{ matrix.service }}:${{ github.sha }}
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/meridian/${{ matrix.service }}:latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      # Temp fix for growing cache issue
+      # https://github.com/docker/build-push-action/issues/252
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+  # ---- Python / ML Tests ----
+  test-ml:
+    name: ML Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Only run ML tests when ML code changes
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'ml') ||
+      github.event_name == 'push'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          cd ml
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Run ML tests
+        run: |
+          cd ml
+          python -m pytest tests/ -v --tb=short
+        continue-on-error: true
+        # TODO: ML tests are currently broken because the test fixtures
+        # reference model v2 which was removed. @ml-team needs to update. (ML-450)
+
+      - name: Run ML linting
+        run: |
+          cd ml
+          ruff check .
+        continue-on-error: true

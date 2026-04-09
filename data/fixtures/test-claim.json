@@ -1,0 +1,127 @@
+{
+  "$schema": "../schemas/claim-schema.json",
+  "_comment": "Test fixture for claim processing unit tests. Represents a typical office visit claim.",
+  "claim": {
+    "claim_id": "CLM-2024-000001",
+    "claim_type": "professional",
+    "claim_status": "submitted",
+    "patient_id": "pat-002-b8e4c3d2",
+    "patient_mrn": "MHT-100002",
+    "patient_name": {
+      "first": "James",
+      "last": "Okafor"
+    },
+    "patient_dob": "1985-11-28",
+    "subscriber": {
+      "member_id": "W123456789",
+      "group_number": "GRP-88712",
+      "relationship_to_patient": "self"
+    },
+    "payer": {
+      "payer_id": "AETN",
+      "payer_name": "Aetna",
+      "plan_name": "HMO Select",
+      "plan_type": "HMO",
+      "address": {
+        "street1": "PO Box 14079",
+        "city": "Lexington",
+        "state": "KY",
+        "zip": "40512"
+      }
+    },
+    "rendering_provider": {
+      "npi": "2345678901",
+      "name": "Raj Patel, MD",
+      "taxonomy_code": "207Q00000X",
+      "tax_id": "04-7654321"
+    },
+    "facility": {
+      "name": "Meridian Health - Back Bay",
+      "npi": "1111111111",
+      "address": {
+        "street1": "100 Boylston Street",
+        "street2": "Suite 300",
+        "city": "Boston",
+        "state": "MA",
+        "zip": "02116"
+      },
+      "place_of_service_code": "11"
+    },
+    "service_date": "2024-10-15",
+    "admission_date": null,
+    "discharge_date": null,
+    "prior_authorization_number": null,
+    "referral_number": "REF-2024-5678",
+    "diagnosis_codes": [
+      { "sequence": 1, "code": "J06.9", "description": "Acute upper respiratory infection, unspecified" },
+      { "sequence": 2, "code": "R05.9", "description": "Cough, unspecified" },
+      { "sequence": 3, "code": "I10", "description": "Essential (primary) hypertension" }
+    ],
+    "line_items": [
+      {
+        "line_number": 1,
+        "cpt_code": "99214",
+        "modifiers": ["25"],
+        "description": "Office/outpatient visit, established patient, moderate MDM",
+        "diagnosis_pointers": [1, 2, 3],
+        "service_date": "2024-10-15",
+        "place_of_service": "11",
+        "units": 1,
+        "billed_amount": 225.00,
+        "allowed_amount": null,
+        "paid_amount": null,
+        "adjustment_amount": null,
+        "patient_responsibility": null,
+        "status": "pending"
+      },
+      {
+        "line_number": 2,
+        "cpt_code": "85025",
+        "modifiers": [],
+        "description": "Complete blood count (CBC) with differential",
+        "diagnosis_pointers": [1],
+        "service_date": "2024-10-15",
+        "place_of_service": "11",
+        "units": 1,
+        "billed_amount": 35.00,
+        "allowed_amount": null,
+        "paid_amount": null,
+        "adjustment_amount": null,
+        "patient_responsibility": null,
+        "status": "pending"
+      },
+      {
+        "line_number": 3,
+        "cpt_code": "87880",
+        "modifiers": [],
+        "description": "Strep test, rapid",
+        "diagnosis_pointers": [1],
+        "service_date": "2024-10-15",
+        "place_of_service": "11",
+        "units": 1,
+        "billed_amount": 30.00,
+        "allowed_amount": null,
+        "paid_amount": null,
+        "adjustment_amount": null,
+        "patient_responsibility": null,
+        "status": "pending"
+      }
+    ],
+    "totals": {
+      "total_billed": 290.00,
+      "total_allowed": null,
+      "total_paid": null,
+      "total_adjustment": null,
+      "total_patient_responsibility": null
+    },
+    "filing_indicator": "CI",
+    "assignment_of_benefits": true,
+    "release_of_information": true,
+    "created_at": "2024-10-15T18:30:00Z",
+    "submitted_at": "2024-10-15T22:00:00Z",
+    "adjudicated_at": null,
+    "paid_at": null,
+    "created_by": "system-auto-claim",
+    "notes": []
+  }
+}

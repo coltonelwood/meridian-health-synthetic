@@ -1,0 +1,871 @@
+{
+  "$schema": "../schemas/patient-schema.json",
+  "_comment": "Seed data for development and testing. All data is synthetic - no real PHI.",
+  "_generated": "2024-09-15",
+  "patients": [
+    {
+      "id": "pat-001-a7f3b2c1",
+      "mrn": "MHT-100001",
+      "first_name": "Eleanor",
+      "last_name": "Vasquez",
+      "date_of_birth": "1958-03-14",
+      "gender": "female",
+      "ssn_last_four": "4521",
+      "email": "eleanor.vasquez@example.com",
+      "phone": "617-555-0101",
+      "address": {
+        "street1": "42 Beacon Hill Road",
+        "street2": null,
+        "city": "Boston",
+        "state": "MA",
+        "zip": "02108"
+      },
+      "emergency_contact": {
+        "name": "Carlos Vasquez",
+        "relationship": "spouse",
+        "phone": "617-555-0102"
+      },
+      "insurance": {
+        "primary": {
+          "payer_id": "BCBS",
+          "payer_name": "Blue Cross Blue Shield of Massachusetts",
+          "plan_name": "PPO Gold",
+          "member_id": "XWB901234567",
+          "group_number": "GRP-44521",
+          "subscriber_name": "Eleanor Vasquez",
+          "subscriber_relationship": "self"
+        },
+        "secondary": null
+      },
+      "primary_provider_npi": "1234567890",
+      "preferred_language": "en",
+      "race": "Hispanic or Latino",
+      "ethnicity": "Mexican",
+      "marital_status": "married",
+      "status": "active",
+      "created_at": "2020-01-15T14:30:00Z"
+    },
+    {
+      "id": "pat-002-b8e4c3d2",
+      "mrn": "MHT-100002",
+      "first_name": "James",
+      "last_name": "Okafor",
+      "date_of_birth": "1985-11-28",
+      "gender": "male",
+      "ssn_last_four": "7832",
+      "email": "james.okafor@example.com",
+      "phone": "617-555-0203",
+      "address": {
+        "street1": "789 Commonwealth Avenue",
+        "street2": "Unit 3A",
+        "city": "Boston",
+        "state": "MA",
+        "zip": "02215"
+      },
+      "emergency_contact": {
+        "name": "Amara Okafor",
+        "relationship": "mother",
+        "phone": "617-555-0204"
+      },
+      "insurance": {
+        "primary": {
+          "payer_id": "AETN",
+          "payer_name": "Aetna",
+          "plan_name": "HMO Select",
+          "member_id": "W123456789",
+          "group_number": "GRP-88712",
+          "subscriber_name": "James Okafor",
+          "subscriber_relationship": "self"
+        },
+        "secondary": null
+      },
+      "primary_provider_npi": "2345678901",
+      "preferred_language": "en",
+      "race": "Black or African American",
+      "ethnicity": "Nigerian",
+      "marital_status": "single",
+      "status": "active",
+      "created_at": "2020-03-22T09:15:00Z"
+    },
+    {
+      "id": "pat-003-c9f5d4e3",
+      "mrn": "MHT-100003",
+      "first_name": "Mei-Lin",
+      "last_name": "Chen",
+      "date_of_birth": "1972-07-09",
+      "gender": "female",
+      "ssn_last_four": "1456",
+      "email": "meiling.chen@example.com",
+      "phone": "617-555-0305",
+      "address": {
+        "street1": "15 Harrison Avenue",
+        "street2": null,
+        "city": "Boston",
+        "state": "MA",
+        "zip": "02111"
+      },
+      "emergency_contact": {
+        "name": "David Chen",
+        "relationship": "spouse",
+        "phone": "617-555-0306"
+      },
+      "insurance": {
+        "primary": {
+          "payer_id": "UHHC",
+          "payer_name": "UnitedHealthcare",
+          "plan_name": "Choice Plus PPO",
+          "member_id": "U987654321",
+          "group_number": "GRP-23100",
+          "subscriber_name": "Mei-Lin Chen",
+          "subscriber_relationship": "self"
+        },
+        "secondary": {
+          "payer_id": "MCRE",
+          "payer_name": "Medicare",
+          "plan_name": "Medicare Part B",
+          "member_id": "1EG4-TE5-MK72",
+          "group_number": null,
+          "subscriber_name": "Mei-Lin Chen",
+          "subscriber_relationship": "self"
+        }
+      },
+      "primary_provider_npi": "1234567890",
+      "preferred_language": "zh",
+      "race": "Asian",
+      "ethnicity": "Chinese",
+      "marital_status": "married",
+      "status": "active",
+      "created_at": "2019-11-08T11:00:00Z"
+    },
+    {
+      "id": "pat-004-d0a6e5f4",
+      "mrn": "MHT-100004",
+      "first_name": "Robert",
+      "last_name": "Kowalski",
+      "date_of_birth": "1949-01-22",
+      "gender": "male",
+      "ssn_last_four": "9067",
+      "email": "robert.kowalski@example.com",
+      "phone": "508-555-0407",
+      "address": {
+        "street1": "300 Maple Street",
+        "street2": null,
+        "city": "Worcester",
+        "state": "MA",
+        "zip": "01608"
+      },
+      "emergency_contact": {
+        "name": "Linda Kowalski",
+        "relationship": "daughter",
+        "phone": "508-555-0408"
+      },
+      "insurance": {
+        "primary": {
+          "payer_id": "MCRE",
+          "payer_name": "Medicare",
+          "plan_name": "Medicare Part B",
+          "member_id": "1AB2-CD3-EF45",
+          "group_number": null,
+          "subscriber_name": "Robert Kowalski",
+          "subscriber_relationship": "self"
+        },
+        "secondary": {
+          "payer_id": "BCBS",
+          "payer_name": "Blue Cross Blue Shield of Massachusetts",
+          "plan_name": "Medicare Supplement Plan F",
+          "member_id": "SUPP901234",
+          "group_number": "GRP-MEDIGAP",
+          "subscriber_name": "Robert Kowalski",
+          "subscriber_relationship": "self"
+        }
+      },
+      "primary_provider_npi": "3456789012",
+      "preferred_language": "en",
+      "race": "White",
+      "ethnicity": "Polish",
+      "marital_status": "widowed",
+      "status": "active",
+      "created_at": "2019-08-12T16:45:00Z"
+    },
+    {
+      "id": "pat-005-e1b7f6a5",
+      "mrn": "MHT-100005",
+      "first_name": "Priya",
+      "last_name": "Nair",
+      "date_of_birth": "1990-05-17",
+      "gender": "female",
+      "ssn_last_four": "3289",
+      "email": "priya.nair@example.com",
+      "phone": "617-555-0509",
+      "address": {
+        "street1": "88 Tremont Street",
+        "street2": "Apt 12F",
+        "city": "Boston",
+        "state": "MA",
+        "zip": "02108"
+      },
+      "emergency_contact": {
+        "name": "Vikram Nair",
+        "relationship": "brother",
+        "phone": "617-555-0510"
+      },
+      "insurance": {
+        "primary": {
+          "payer_id": "CGNA",
+          "payer_name": "Cigna",
+          "plan_name": "Open Access Plus",
+          "member_id": "CIG-45678901",
+          "group_number": "GRP-99234",
+          "subscriber_name": "Priya Nair",
+          "subscriber_relationship": "self"
+        },
+        "secondary": null
+      },
+      "primary_provider_npi": "2345678901",
+      "preferred_language": "en",
+      "race": "Asian",
+      "ethnicity": "Indian",
+      "marital_status": "single",
+      "status": "active",
+      "created_at": "2021-02-10T10:00:00Z"
+    },
+    {
+      "id": "pat-006-f2c8a7b6",
+      "mrn": "MHT-100006",
+      "first_name": "Marcus",
+      "last_name": "Johnson",
+      "date_of_birth": "1978-09-03",
+      "gender": "male",
+      "ssn_last_four": "5614",
+      "email": "marcus.johnson@example.com",
+      "phone": "781-555-0611",
+      "address": {
+        "street1": "567 Washington Street",
+        "street2": null,
+        "city": "Brookline",
+        "state": "MA",
+        "zip": "02445"
+      },
+      "emergency_contact": {
+        "name": "Tanya Johnson",
+        "relationship": "spouse",
+        "phone": "781-555-0612"
+      },
+      "insurance": {
+        "primary": {
+          "payer_id": "BCBS",
+          "payer_name": "Blue Cross Blue Shield of Massachusetts",
+          "plan_name": "PPO Silver",
+          "member_id": "XWB567890123",
+          "group_number": "GRP-77891",
+          "subscriber_name": "Marcus Johnson",
+          "subscriber_relationship": "self"
+        },
+        "secondary": null
+      },
+      "primary_provider_npi": "4567890123",
+      "preferred_language": "en",
+      "race": "Black or African American",
+      "ethnicity": "African American",
+      "marital_status": "married",
+      "status": "active",
+      "created_at": "2020-06-18T13:30:00Z"
+    },
+    {
+      "id": "pat-007-a3d9b8c7",
+      "mrn": "MHT-100007",
+      "first_name": "Fatima",
+      "last_name": "Al-Rashidi",
+      "date_of_birth": "1995-12-01",
+      "gender": "female",
+      "ssn_last_four": "8745",
+      "email": "fatima.alrashidi@example.com",
+      "phone": "617-555-0713",
+      "address": {
+        "street1": "204 Cambridge Street",
+        "street2": "Apt 8",
+        "city": "Cambridge",
+        "state": "MA",
+        "zip": "02141"
+      },
+      "emergency_contact": {
+        "name": "Hassan Al-Rashidi",
+        "relationship": "father",
+        "phone": "617-555-0714"
+      },
+      "insurance": {
+        "primary": {
+          "payer_id": "HMNA",
+          "payer_name": "Humana",
+          "plan_name": "Gold Plus HMO",
+          "member_id": "H789012345",
+          "group_number": "GRP-56001",
+          "subscriber_name": "Hassan Al-Rashidi",
+          "subscriber_relationship": "child"
+        },
+        "secondary": null
+      },
+      "primary_provider_npi": "2345678901",
+      "preferred_language": "ar",
+      "race": "White",
+      "ethnicity": "Middle Eastern",
+      "marital_status": "single",
+      "status": "active",
+      "created_at": "2022-01-05T08:45:00Z"
+    },
+    {
+      "id": "pat-008-b4e0c9d8",
+      "mrn": "MHT-100008",
+      "first_name": "Thomas",
+      "last_name": "O'Brien",
+      "date_of_birth": "1963-04-20",
+      "gender": "male",
+      "ssn_last_four": "2398",
+      "email": "thomas.obrien@example.com",
+      "phone": "617-555-0815",
+      "address": {
+        "street1": "1122 Dorchester Avenue",
+        "street2": null,
+        "city": "Dorchester",
+        "state": "MA",
+        "zip": "02125"
+      },
+      "emergency_contact": {
+        "name": "Kathleen O'Brien",
+        "relationship": "spouse",
+        "phone": "617-555-0816"
+      },
+      "insurance": {
+        "primary": {
+          "payer_id": "AETN",
+          "payer_name": "Aetna",
+          "plan_name": "PPO Standard",
+          "member_id": "W987654321",
+          "group_number": "GRP-33456",
+          "subscriber_name": "Thomas O'Brien",
+          "subscriber_relationship": "self"
+        },
+        "secondary": null
+      },
+      "primary_provider_npi": "3456789012",
+      "preferred_language": "en",
+      "race": "White",
+      "ethnicity": "Irish",
+      "marital_status": "married",
+      "status": "active",
+      "created_at": "2019-05-30T14:15:00Z"
+    },
+    {
+      "id": "pat-009-c5f1d0e9",
+      "mrn": "MHT-100009",
+      "first_name": "Aisha",
+      "last_name": "Williams",
+      "date_of_birth": "2001-08-12",
+      "gender": "female",
+      "ssn_last_four": "6073",
+      "email": "aisha.williams@example.com",
+      "phone": "617-555-0917",
+      "address": {
+        "street1": "33 Blue Hill Avenue",
+        "street2": "Floor 2",
+        "city": "Roxbury",
+        "state": "MA",
+        "zip": "02119"
+      },
+      "emergency_contact": {
+        "name": "Denise Williams",
+        "relationship": "mother",
+        "phone": "617-555-0918"
+      },
+      "insurance": {
+        "primary": {
+          "payer_id": "MCAD",
+          "payer_name": "MassHealth (Medicaid)",
+          "plan_name": "MassHealth Standard",
+          "member_id": "MA-456789012",
+          "group_number": null,
+          "subscriber_name": "Aisha Williams",
+          "subscriber_relationship": "self"
+        },
+        "secondary": null
+      },
+      "primary_provider_npi": "4567890123",
+      "preferred_language": "en",
+      "race": "Black or African American",
+      "ethnicity": "African American",
+      "marital_status": "single",
+      "status": "active",
+      "created_at": "2022-08-20T11:30:00Z"
+    },
+    {
+      "id": "pat-010-d6a2e1f0",
+      "mrn": "MHT-100010",
+      "first_name": "Hiroshi",
+      "last_name": "Tanaka",
+      "date_of_birth": "1980-02-28",
+      "gender": "male",
+      "ssn_last_four": "4190",
+      "email": "hiroshi.tanaka@example.com",
+      "phone": "617-555-1019",
+      "address": {
+        "street1": "450 Huntington Avenue",
+        "street2": null,
+        "city": "Boston",
+        "state": "MA",
+        "zip": "02115"
+      },
+      "emergency_contact": {
+        "name": "Yuki Tanaka",
+        "relationship": "spouse",
+        "phone": "617-555-1020"
+      },
+      "insurance": {
+        "primary": {
+          "payer_id": "UHHC",
+          "payer_name": "UnitedHealthcare",
+          "plan_name": "Choice Plus PPO",
+          "member_id": "U111222333",
+          "group_number": "GRP-67890",
+          "subscriber_name": "Hiroshi Tanaka",
+          "subscriber_relationship": "self"
+        },
+        "secondary": null
+      },
+      "primary_provider_npi": "1234567890",
+      "preferred_language": "ja",
+      "race": "Asian",
+      "ethnicity": "Japanese",
+      "marital_status": "married",
+      "status": "active",
+      "created_at": "2021-04-12T09:00:00Z"
+    },
+    {
+      "id": "pat-011-e7b3f2a1",
+      "mrn": "MHT-100011",
+      "first_name": "Maria",
+      "last_name": "Santos",
+      "date_of_birth": "1988-10-05",
+      "gender": "female",
+      "ssn_last_four": "7521",
+      "email": "maria.santos@example.com",
+      "phone": "508-555-1121",
+      "address": {
+        "street1": "78 Main Street",
+        "street2": null,
+        "city": "Framingham",
+        "state": "MA",
+        "zip": "01702"
+      },
+      "emergency_contact": {
+        "name": "Pedro Santos",
+        "relationship": "spouse",
+        "phone": "508-555-1122"
+      },
+      "insurance": {
+        "primary": {
+          "payer_id": "BCBS",
+          "payer_name": "Blue Cross Blue Shield of Massachusetts",
+          "plan_name": "HMO Blue",
+          "member_id": "XWB234567890",
+          "group_number": "GRP-12345",
+          "subscriber_name": "Pedro Santos",
+          "subscriber_relationship": "spouse"
+        },
+        "secondary": null
+      },
+      "primary_provider_npi": "5678901234",
+      "preferred_language": "pt",
+      "race": "Hispanic or Latino",
+      "ethnicity": "Brazilian",
+      "marital_status": "married",
+      "status": "active",
+      "created_at": "2020-09-01T15:30:00Z"
+    },
+    {
+      "id": "pat-012-f8c4a3b2",
+      "mrn": "MHT-100012",
+      "first_name": "William",
+      "last_name": "Nguyen",
+      "date_of_birth": "1975-06-18",
+      "gender": "male",
+      "ssn_last_four": "8934",
+      "email": "william.nguyen@example.com",
+      "phone": "617-555-1223",
+      "address": {
+        "street1": "912 Boylston Street",
+        "street2": "Suite 5",
+        "city": "Boston",
+        "state": "MA",
+        "zip": "02115"
+      },
+      "emergency_contact": {
+        "name": "Linh Nguyen",
+        "relationship": "spouse",
+        "phone": "617-555-1224"
+      },
+      "insurance": {
+        "primary": {
+          "payer_id": "CGNA",
+          "payer_name": "Cigna",
+          "plan_name": "PPO 80/20",
+          "member_id": "CIG-78901234",
+          "group_number": "GRP-45678",
+          "subscriber_name": "William Nguyen",
+          "subscriber_relationship": "self"
+        },
+        "secondary": null
+      },
+      "primary_provider_npi": "3456789012",
+      "preferred_language": "en",
+      "race": "Asian",
+      "ethnicity": "Vietnamese",
+      "marital_status": "married",
+      "status": "active",
+      "created_at": "2019-12-10T10:45:00Z"
+    },
+    {
+      "id": "pat-013-a9d5b4c3",
+      "mrn": "MHT-100013",
+      "first_name": "Sarah",
+      "last_name": "Goldstein",
+      "date_of_birth": "1992-01-30",
+      "gender": "female",
+      "ssn_last_four": "1567",
+      "email": "sarah.goldstein@example.com",
+      "phone": "617-555-1325",
+      "address": {
+        "street1": "225 Newbury Street",
+        "street2": null,
+        "city": "Boston",
+        "state": "MA",
+        "zip": "02116"
+      },
+      "emergency_contact": {
+        "name": "David Goldstein",
+        "relationship": "father",
+        "phone": "617-555-1326"
+      },
+      "insurance": {
+        "primary": {
+          "payer_id": "AETN",
+          "payer_name": "Aetna",
+          "plan_name": "HMO Select",
+          "member_id": "W555666777",
+          "group_number": "GRP-90123",
+          "subscriber_name": "Sarah Goldstein",
+          "subscriber_relationship": "self"
+        },
+        "secondary": null
+      },
+      "primary_provider_npi": "2345678901",
+      "preferred_language": "en",
+      "race": "White",
+      "ethnicity": "Ashkenazi Jewish",
+      "marital_status": "single",
+      "status": "active",
+      "created_at": "2021-07-14T12:00:00Z"
+    },
+    {
+      "id": "pat-014-b0e6c5d4",
+      "mrn": "MHT-100014",
+      "first_name": "Darnell",
+      "last_name": "Washington",
+      "date_of_birth": "1967-12-25",
+      "gender": "male",
+      "ssn_last_four": "3401",
+      "email": "darnell.washington@example.com",
+      "phone": "617-555-1427",
+      "address": {
+        "street1": "44 Warren Street",
+        "street2": null,
+        "city": "Roxbury",
+        "state": "MA",
+        "zip": "02119"
+      },
+      "emergency_contact": {
+        "name": "Patricia Washington",
+        "relationship": "sister",
+        "phone": "617-555-1428"
+      },
+      "insurance": {
+        "primary": {
+          "payer_id": "MCRE",
+          "payer_name": "Medicare",
+          "plan_name": "Medicare Advantage",
+          "member_id": "1HJ5-KL6-MN78",
+          "group_number": null,
+          "subscriber_name": "Darnell Washington",
+          "subscriber_relationship": "self"
+        },
+        "secondary": null
+      },
+      "primary_provider_npi": "4567890123",
+      "preferred_language": "en",
+      "race": "Black or African American",
+      "ethnicity": "African American",
+      "marital_status": "divorced",
+      "status": "active",
+      "created_at": "2020-02-28T08:30:00Z"
+    },
+    {
+      "id": "pat-015-c1f7d6e5",
+      "mrn": "MHT-100015",
+      "first_name": "Olga",
+      "last_name": "Petrov",
+      "date_of_birth": "1955-04-11",
+      "gender": "female",
+      "ssn_last_four": "6823",
+      "email": "olga.petrov@example.com",
+      "phone": "617-555-1529",
+      "address": {
+        "street1": "1500 Centre Street",
+        "street2": null,
+        "city": "West Roxbury",
+        "state": "MA",
+        "zip": "02132"
+      },
+      "emergency_contact": {
+        "name": "Dmitri Petrov",
+        "relationship": "son",
+        "phone": "617-555-1530"
+      },
+      "insurance": {
+        "primary": {
+          "payer_id": "MCRE",
+          "payer_name": "Medicare",
+          "plan_name": "Medicare Part B",
+          "member_id": "1QR8-ST9-UV01",
+          "group_number": null,
+          "subscriber_name": "Olga Petrov",
+          "subscriber_relationship": "self"
+        },
+        "secondary": {
+          "payer_id": "HMNA",
+          "payer_name": "Humana",
+          "plan_name": "Medicare Supplement",
+          "member_id": "H456789012",
+          "group_number": "GRP-SUPP01",
+          "subscriber_name": "Olga Petrov",
+          "subscriber_relationship": "self"
+        }
+      },
+      "primary_provider_npi": "5678901234",
+      "preferred_language": "ru",
+      "race": "White",
+      "ethnicity": "Russian",
+      "marital_status": "widowed",
+      "status": "active",
+      "created_at": "2019-07-22T13:00:00Z"
+    },
+    {
+      "id": "pat-016-d2a8e7f6",
+      "mrn": "MHT-100016",
+      "first_name": "Alejandro",
+      "last_name": "Reyes",
+      "date_of_birth": "1998-07-04",
+      "gender": "male",
+      "ssn_last_four": "9156",
+      "email": "alejandro.reyes@example.com",
+      "phone": "617-555-1631",
+      "address": {
+        "street1": "67 Broadway",
+        "street2": "Apt 4C",
+        "city": "Somerville",
+        "state": "MA",
+        "zip": "02145"
+      },
+      "emergency_contact": {
+        "name": "Carmen Reyes",
+        "relationship": "mother",
+        "phone": "617-555-1632"
+      },
+      "insurance": {
+        "primary": {
+          "payer_id": "BCBS",
+          "payer_name": "Blue Cross Blue Shield of Massachusetts",
+          "plan_name": "PPO Bronze",
+          "member_id": "XWB890123456",
+          "group_number": "GRP-55678",
+          "subscriber_name": "Carmen Reyes",
+          "subscriber_relationship": "child"
+        },
+        "secondary": null
+      },
+      "primary_provider_npi": "1234567890",
+      "preferred_language": "es",
+      "race": "Hispanic or Latino",
+      "ethnicity": "Puerto Rican",
+      "marital_status": "single",
+      "status": "active",
+      "created_at": "2022-03-15T16:00:00Z"
+    },
+    {
+      "id": "pat-017-e3b9f8a7",
+      "mrn": "MHT-100017",
+      "first_name": "Grace",
+      "last_name": "Kim",
+      "date_of_birth": "1983-03-22",
+      "gender": "female",
+      "ssn_last_four": "2478",
+      "email": "grace.kim@example.com",
+      "phone": "617-555-1733",
+      "address": {
+        "street1": "340 Harvard Street",
+        "street2": null,
+        "city": "Brookline",
+        "state": "MA",
+        "zip": "02446"
+      },
+      "emergency_contact": {
+        "name": "Daniel Kim",
+        "relationship": "spouse",
+        "phone": "617-555-1734"
+      },
+      "insurance": {
+        "primary": {
+          "payer_id": "UHHC",
+          "payer_name": "UnitedHealthcare",
+          "plan_name": "Patriot PPO",
+          "member_id": "U444555666",
+          "group_number": "GRP-78901",
+          "subscriber_name": "Grace Kim",
+          "subscriber_relationship": "self"
+        },
+        "secondary": null
+      },
+      "primary_provider_npi": "2345678901",
+      "preferred_language": "ko",
+      "race": "Asian",
+      "ethnicity": "Korean",
+      "marital_status": "married",
+      "status": "active",
+      "created_at": "2021-01-08T10:30:00Z"
+    },
+    {
+      "id": "pat-018-f4c0a9b8",
+      "mrn": "MHT-100018",
+      "first_name": "Anthony",
+      "last_name": "DiMaggio",
+      "date_of_birth": "1970-11-15",
+      "gender": "male",
+      "ssn_last_four": "5802",
+      "email": "anthony.dimaggio@example.com",
+      "phone": "617-555-1835",
+      "address": {
+        "street1": "89 Hanover Street",
+        "street2": null,
+        "city": "Boston",
+        "state": "MA",
+        "zip": "02113"
+      },
+      "emergency_contact": {
+        "name": "Rosa DiMaggio",
+        "relationship": "spouse",
+        "phone": "617-555-1836"
+      },
+      "insurance": {
+        "primary": {
+          "payer_id": "CGNA",
+          "payer_name": "Cigna",
+          "plan_name": "OAP 90/10",
+          "member_id": "CIG-12345678",
+          "group_number": "GRP-34567",
+          "subscriber_name": "Anthony DiMaggio",
+          "subscriber_relationship": "self"
+        },
+        "secondary": null
+      },
+      "primary_provider_npi": "5678901234",
+      "preferred_language": "en",
+      "race": "White",
+      "ethnicity": "Italian",
+      "marital_status": "married",
+      "status": "active",
+      "created_at": "2019-10-25T14:00:00Z"
+    },
+    {
+      "id": "pat-019-a5d1b0c9",
+      "mrn": "MHT-100019",
+      "first_name": "Keisha",
+      "last_name": "Thompson",
+      "date_of_birth": "1986-08-29",
+      "gender": "female",
+      "ssn_last_four": "4367",
+      "email": "keisha.thompson@example.com",
+      "phone": "617-555-1937",
+      "address": {
+        "street1": "250 Dudley Street",
+        "street2": "Unit B",
+        "city": "Roxbury",
+        "state": "MA",
+        "zip": "02119"
+      },
+      "emergency_contact": {
+        "name": "Michael Thompson",
+        "relationship": "spouse",
+        "phone": "617-555-1938"
+      },
+      "insurance": {
+        "primary": {
+          "payer_id": "AETN",
+          "payer_name": "Aetna",
+          "plan_name": "PPO Plus",
+          "member_id": "W222333444",
+          "group_number": "GRP-67890",
+          "subscriber_name": "Keisha Thompson",
+          "subscriber_relationship": "self"
+        },
+        "secondary": null
+      },
+      "primary_provider_npi": "4567890123",
+      "preferred_language": "en",
+      "race": "Black or African American",
+      "ethnicity": "Jamaican American",
+      "marital_status": "married",
+      "status": "active",
+      "created_at": "2020-11-11T09:45:00Z"
+    },
+    {
+      "id": "pat-020-b6e2c1d0",
+      "mrn": "MHT-100020",
+      "first_name": "Erik",
+      "last_name": "Lindgren",
+      "date_of_birth": "1993-02-14",
+      "gender": "male",
+      "ssn_last_four": "7145",
+      "email": "erik.lindgren@example.com",
+      "phone": "617-555-2039",
+      "address": {
+        "street1": "156 Pearl Street",
+        "street2": null,
+        "city": "Cambridge",
+        "state": "MA",
+        "zip": "02139"
+      },
+      "emergency_contact": {
+        "name": "Karen Lindgren",
+        "relationship": "mother",
+        "phone": "781-555-2040"
+      },
+      "insurance": {
+        "primary": {
+          "payer_id": "BCBS",
+          "payer_name": "Blue Cross Blue Shield of Massachusetts",
+          "plan_name": "PPO Platinum",
+          "member_id": "XWB345678901",
+          "group_number": "GRP-11223",
+          "subscriber_name": "Erik Lindgren",
+          "subscriber_relationship": "self"
+        },
+        "secondary": null
+      },
+      "primary_provider_npi": "1234567890",
+      "preferred_language": "en",
+      "race": "White",
+      "ethnicity": "Swedish",
+      "marital_status": "single",
+      "status": "inactive",
+      "created_at": "2021-09-30T11:15:00Z"
+    }
+  ]
+}

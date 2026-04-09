@@ -1,0 +1,112 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: meridian-api
+  namespace: meridian
+  labels:
+    app.kubernetes.io/part-of: meridian-health
+  annotations:
+    # TLS
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+
+    # Security headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "Strict-Transport-Security: max-age=31536000; includeSubDomains; preload";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "X-Frame-Options: DENY";
+      more_set_headers "X-XSS-Protection: 1; mode=block";
+      more_set_headers "Referrer-Policy: strict-origin-when-cross-origin";
+      more_set_headers "Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'";
+
+    # Rate limiting
+    # API rate limits are critical for healthcare apps - prevents abuse
+    # and ensures fair access during peak enrollment periods
+    nginx.ingress.kubernetes.io/limit-rps: "50"
+    nginx.ingress.kubernetes.io/limit-rpm: "1000"
+    nginx.ingress.kubernetes.io/limit-burst-multiplier: "3"
+    nginx.ingress.kubernetes.io/limit-connections: "20"
+
+    # Request size limits (for document uploads)
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+
+    # Timeouts
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "10"
+
+    # CORS - handled by the application, not ingress
+    # (each service has its own CORS config)
+
+    # WAF integration
+    nginx.ingress.kubernetes.io/enable-modsecurity: "true"
+    nginx.ingress.kubernetes.io/modsecurity-snippet: |
+      SecRuleEngine On
+      SecRule REQUEST_HEADERS:Content-Type "text/plain" "id:1,phase:1,deny,status:406"
+
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - api.meridianhealth.io
+        - portal-api.meridianhealth.io
+      secretName: meridian-api-tls
+  rules:
+    - host: api.meridianhealth.io
+      http:
+        paths:
+          - path: /api/v1/patients
+            pathType: Prefix
+            backend:
+              service:
+                name: patient-api
+                port:
+                  number: 3000
+          - path: /api/v1/claims
+            pathType: Prefix
+            backend:
+              service:
+                name: claims-engine
+                port:
+                  number: 3001
+          - path: /api/v1/referrals
+            pathType: Prefix
+            backend:
+              service:
+                name: referral-service
+                port:
+                  number: 3002
+          - path: /api/v1/scheduling
+            pathType: Prefix
+            backend:
+              service:
+                name: scheduling-service
+                port:
+                  number: 3003
+          - path: /api/v1/documents
+            pathType: Prefix
+            backend:
+              service:
+                name: document-service
+                port:
+                  number: 3004
+          # FHIR R4 API (behind feature flag at the app level)
+          - path: /fhir/r4
+            pathType: Prefix
+            backend:
+              service:
+                name: fhir-gateway
+                port:
+                  number: 3010
+
+    - host: portal-api.meridianhealth.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: patient-portal-bff
+                port:
+                  number: 3020

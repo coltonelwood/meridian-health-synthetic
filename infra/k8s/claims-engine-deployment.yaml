@@ -1,0 +1,166 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: claims-engine
+  namespace: meridian
+  labels:
+    app: claims-engine
+    app.kubernetes.io/name: claims-engine
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/part-of: meridian-health
+    contains-phi: "true"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: claims-engine
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: claims-engine
+        app.kubernetes.io/name: claims-engine
+        contains-phi: "true"
+    spec:
+      serviceAccountName: claims-engine
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+
+      # Claims engine needs more resources than typical services
+      # because it processes batches of claims in parallel
+      containers:
+        - name: claims-engine
+          image: meridian/claims-engine:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3001
+              protocol: TCP
+              name: http
+          resources:
+            requests:
+              cpu: "1000m"
+              memory: "2Gi"
+            limits:
+              cpu: "4000m"
+              memory: "8Gi"
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3001"
+            - name: SERVICE_NAME
+              value: "claims-engine"
+            - name: CLAIM_PROCESSING_CONCURRENCY
+              value: "10"
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: meridian-config
+                  key: db-host
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: password
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: meridian-config
+                  key: redis-host
+            - name: CHANGE_HEALTHCARE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: clearinghouse-credentials
+                  key: change-healthcare-key
+            - name: AVAILITY_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: clearinghouse-credentials
+                  key: availity-key
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            failureThreshold: 30
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 2
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: claim-processing
+              mountPath: /app/processing
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: claim-processing
+          emptyDir:
+            sizeLimit: 1Gi
+      terminationGracePeriodSeconds: 120 # Claims engine needs longer to drain
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: claims-engine
+  namespace: meridian
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3001
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: claims-engine
+
+---
+# PodDisruptionBudget: always keep at least 1 pod running
+# Critical for claim processing continuity - we can't afford to
+# lose all claim processors during a node drain
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: claims-engine-pdb
+  namespace: meridian
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: claims-engine
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: claims-engine
+  namespace: meridian
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/meridian-claims-engine

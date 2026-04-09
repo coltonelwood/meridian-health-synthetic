@@ -1,0 +1,245 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: meridian-alerts
+  namespace: meridian
+  labels:
+    app.kubernetes.io/part-of: meridian-health
+    prometheus: kube-prometheus
+    role: alert-rules
+spec:
+  groups:
+    # =========================================================================
+    # Service Health Alerts
+    # =========================================================================
+    - name: meridian.service-health
+      rules:
+        - alert: HighErrorRate
+          expr: |
+            sum(rate(http_requests_total{namespace="meridian",status=~"5.."}[5m])) by (service)
+            /
+            sum(rate(http_requests_total{namespace="meridian"}[5m])) by (service)
+            > 0.05
+          for: 5m
+          labels:
+            severity: critical
+            team: platform
+          annotations:
+            summary: "High error rate on {{ $labels.service }}"
+            description: "{{ $labels.service }} has a 5xx error rate of {{ $value | humanizePercentage }} (threshold: 5%)"
+            runbook_url: "https://wiki.meridianhealth.io/runbooks/high-error-rate"
+
+        - alert: HighLatencyP99
+          expr: |
+            histogram_quantile(0.99,
+              sum(rate(http_request_duration_seconds_bucket{namespace="meridian"}[5m])) by (le, service)
+            ) > 2.0
+          for: 10m
+          labels:
+            severity: warning
+            team: platform
+          annotations:
+            summary: "High p99 latency on {{ $labels.service }}"
+            description: "{{ $labels.service }} p99 latency is {{ $value | humanizeDuration }} (threshold: 2s)"
+
+        - alert: HighLatencyP99Critical
+          expr: |
+            histogram_quantile(0.99,
+              sum(rate(http_request_duration_seconds_bucket{namespace="meridian"}[5m])) by (le, service)
+            ) > 5.0
+          for: 5m
+          labels:
+            severity: critical
+            team: platform
+          annotations:
+            summary: "Critical p99 latency on {{ $labels.service }}"
+            description: "{{ $labels.service }} p99 latency is {{ $value | humanizeDuration }} (threshold: 5s)"
+
+        - alert: ServiceDown
+          expr: |
+            up{namespace="meridian"} == 0
+          for: 2m
+          labels:
+            severity: critical
+            team: platform
+          annotations:
+            summary: "{{ $labels.service }} is down"
+            description: "{{ $labels.service }} has been down for more than 2 minutes"
+            runbook_url: "https://wiki.meridianhealth.io/runbooks/service-down"
+
+        - alert: PodCrashLooping
+          expr: |
+            rate(kube_pod_container_status_restarts_total{namespace="meridian"}[15m]) > 0.1
+          for: 5m
+          labels:
+            severity: critical
+            team: platform
+          annotations:
+            summary: "Pod {{ $labels.pod }} is crash looping"
+            description: "Pod {{ $labels.pod }} in {{ $labels.namespace }} is restarting frequently"
+
+    # =========================================================================
+    # Claim Processing Alerts
+    # =========================================================================
+    - name: meridian.claims
+      rules:
+        - alert: ClaimProcessingQueueDepth
+          expr: |
+            meridian_claim_queue_depth{namespace="meridian"} > 500
+          for: 15m
+          labels:
+            severity: warning
+            team: revenue-cycle
+          annotations:
+            summary: "Claim processing queue is backing up"
+            description: "{{ $value }} claims in the processing queue (threshold: 500). Check clearinghouse connectivity."
+
+        - alert: ClaimProcessingQueueCritical
+          expr: |
+            meridian_claim_queue_depth{namespace="meridian"} > 2000
+          for: 5m
+          labels:
+            severity: critical
+            team: revenue-cycle
+          annotations:
+            summary: "Claim processing queue is critically backed up"
+            description: "{{ $value }} claims in the processing queue. This may indicate a clearinghouse outage."
+            runbook_url: "https://wiki.meridianhealth.io/runbooks/claim-queue-critical"
+
+        - alert: ClaimSubmissionFailureRate
+          expr: |
+            sum(rate(meridian_claim_submission_total{status="failed"}[15m]))
+            /
+            sum(rate(meridian_claim_submission_total[15m]))
+            > 0.1
+          for: 10m
+          labels:
+            severity: critical
+            team: revenue-cycle
+          annotations:
+            summary: "High claim submission failure rate"
+            description: "{{ $value | humanizePercentage }} of claim submissions are failing. Check clearinghouse status."
+
+        - alert: RemittanceProcessingDelay
+          expr: |
+            time() - meridian_last_remittance_processed_timestamp{namespace="meridian"} > 86400
+          for: 30m
+          labels:
+            severity: warning
+            team: revenue-cycle
+          annotations:
+            summary: "No remittance files processed in 24 hours"
+            description: "Last remittance file was processed {{ $value | humanizeDuration }} ago"
+
+        - alert: HighDenialRate
+          expr: |
+            sum(rate(meridian_claim_denial_total[1h])) by (payer_id)
+            /
+            sum(rate(meridian_claim_adjudication_total[1h])) by (payer_id)
+            > 0.15
+          for: 1h
+          labels:
+            severity: warning
+            team: revenue-cycle
+          annotations:
+            summary: "High denial rate from {{ $labels.payer_id }}"
+            description: "Denial rate from {{ $labels.payer_id }} is {{ $value | humanizePercentage }} (threshold: 15%)"
+
+    # =========================================================================
+    # Database Alerts
+    # =========================================================================
+    - name: meridian.database
+      rules:
+        - alert: DatabaseConnectionPoolExhausted
+          expr: |
+            meridian_db_pool_active_connections{namespace="meridian"}
+            /
+            meridian_db_pool_max_connections{namespace="meridian"}
+            > 0.85
+          for: 5m
+          labels:
+            severity: warning
+            team: platform
+          annotations:
+            summary: "Database connection pool near capacity on {{ $labels.service }}"
+            description: "{{ $labels.service }} is using {{ $value | humanizePercentage }} of its connection pool"
+
+        - alert: DatabaseConnectionPoolCritical
+          expr: |
+            meridian_db_pool_active_connections{namespace="meridian"}
+            /
+            meridian_db_pool_max_connections{namespace="meridian"}
+            > 0.95
+          for: 2m
+          labels:
+            severity: critical
+            team: platform
+          annotations:
+            summary: "Database connection pool exhausted on {{ $labels.service }}"
+            description: "{{ $labels.service }} connection pool is at {{ $value | humanizePercentage }}. Queries will start failing."
+            runbook_url: "https://wiki.meridianhealth.io/runbooks/db-pool-exhausted"
+
+        - alert: SlowQueries
+          expr: |
+            rate(meridian_db_slow_queries_total{namespace="meridian"}[5m]) > 0.5
+          for: 10m
+          labels:
+            severity: warning
+            team: platform
+          annotations:
+            summary: "High slow query rate on {{ $labels.service }}"
+            description: "{{ $labels.service }} is generating {{ $value }} slow queries per second"
+
+        - alert: DatabaseReplicationLag
+          expr: |
+            meridian_db_replication_lag_seconds > 30
+          for: 5m
+          labels:
+            severity: warning
+            team: platform
+          annotations:
+            summary: "Database replication lag is high"
+            description: "Replication lag is {{ $value | humanizeDuration }}. Read replica data may be stale."
+
+    # =========================================================================
+    # Security / HIPAA Alerts
+    # =========================================================================
+    - name: meridian.security
+      rules:
+        - alert: HighAuthFailureRate
+          expr: |
+            sum(rate(meridian_auth_failure_total{namespace="meridian"}[5m])) > 10
+          for: 5m
+          labels:
+            severity: warning
+            team: security
+          annotations:
+            summary: "High authentication failure rate"
+            description: "{{ $value }} auth failures per second. Possible brute force attack."
+
+        - alert: PHIAccessAnomaly
+          expr: |
+            sum(rate(meridian_phi_access_total{namespace="meridian"}[5m])) by (user_id)
+            > 3 * avg_over_time(
+              sum(rate(meridian_phi_access_total{namespace="meridian"}[5m])) by (user_id)
+              [7d:1h]
+            )
+          for: 15m
+          labels:
+            severity: warning
+            team: security
+          annotations:
+            summary: "Anomalous PHI access pattern detected"
+            description: "User {{ $labels.user_id }} is accessing PHI at 3x their normal rate"
+
+        - alert: UnauthorizedPHIAccess
+          expr: |
+            sum(rate(meridian_phi_access_denied_total{namespace="meridian"}[5m])) > 1
+          for: 5m
+          labels:
+            severity: critical
+            team: security
+          annotations:
+            summary: "Unauthorized PHI access attempts detected"
+            description: "{{ $value }} unauthorized PHI access attempts per second"
+            runbook_url: "https://wiki.meridianhealth.io/runbooks/unauthorized-phi-access"

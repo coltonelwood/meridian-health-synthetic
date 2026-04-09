@@ -1,0 +1,140 @@
+# Triage Label Definitions
+#
+# These define the four urgency levels for patient portal messages.
+# Used for labeler training and model evaluation.
+#
+# Created by Clinical Informatics team (Dr. Martinez, Dr. Kim)
+# Last reviewed: 2025-08-15
+#
+# IMPORTANT: when in doubt, label UP (higher urgency).
+# It's safer to over-triage than under-triage.
+
+labels:
+  EMERGENCY:
+    description: >
+      Messages indicating a potentially life-threatening situation
+      that requires immediate medical attention (minutes to hours).
+      These should trigger an alert to the care team AND a callback
+      to the patient advising them to call 911 or go to the ED.
+    response_sla: "15 minutes"
+    examples:
+      - "I'm having crushing chest pain that goes down my left arm"
+      - "My child fell and is not responding, won't wake up"
+      - "I took a whole bottle of my sleeping pills"
+      - "I'm having trouble breathing and my lips are turning blue"
+      - "I'm having the worst headache of my life and can't see straight"
+      - "I'm bleeding heavily and can't stop it"
+      - "I think I'm having a stroke my face is drooping and I can't move my arm"
+      - "Severe allergic reaction, throat swelling shut"
+    keywords:
+      - "can't breathe"
+      - "chest pain"
+      - "stroke"
+      - "overdose"
+      - "suicidal"
+      - "unresponsive"
+      - "unconscious"
+      - "severe bleeding"
+      - "anaphylaxis"
+    notes: >
+      Some of these patients should NOT be messaging through the portal -
+      they should be calling 911. But it happens, and we need to catch it.
+
+  URGENT:
+    description: >
+      Messages requiring same-day or next-day clinical attention.
+      Not immediately life-threatening but could worsen significantly
+      without timely intervention.
+    response_sla: "4 hours"
+    examples:
+      - "I've had a fever of 103 for two days and it's not coming down with Tylenol"
+      - "My incision from surgery last week is red, swollen, and oozing"
+      - "I ran out of my blood pressure medication 3 days ago and feel dizzy"
+      - "My blood sugar has been over 400 for the past day despite taking insulin"
+      - "I'm having severe abdominal pain and vomiting and can't keep anything down"
+      - "I fell and my ankle is very swollen, I can't put weight on it"
+      - "My child has been pulling at their ear and screaming for hours, temp 102"
+      - "I've been having heart palpitations on and off all day"
+    keywords:
+      - "high fever"
+      - "infection"
+      - "ran out of medication"
+      - "severe pain"
+      - "can't keep food down"
+      - "blood sugar very high"
+      - "blood sugar very low"
+      - "swelling"
+    notes: >
+      The line between URGENT and EMERGENCY can be fuzzy. Key differentiators:
+      EMERGENCY = happening RIGHT NOW and potentially fatal.
+      URGENT = needs attention soon but patient is currently stable.
+
+  ROUTINE:
+    description: >
+      Messages requiring clinical attention within the normal
+      scheduling window (2-7 days). These are common clinical
+      questions, symptom reports, and care coordination needs.
+    response_sla: "24 hours"
+    examples:
+      - "I'd like to discuss my recent lab results when you get a chance"
+      - "I've been having some knee pain when I climb stairs, getting worse over months"
+      - "Can I get a referral to a dermatologist for this rash I've had for a few weeks?"
+      - "My allergies have been bad this season, is there a stronger medication I can try?"
+      - "I need to get my annual physical scheduled"
+      - "Can you refill my cholesterol medication? I have about a week's supply left"
+      - "I've been having trouble sleeping for the past month"
+      - "My child needs their school physical forms completed"
+    keywords:
+      - "refill"
+      - "appointment"
+      - "referral"
+      - "lab results"
+      - "annual physical"
+      - "when you get a chance"
+    notes: >
+      This is the most common category (~55% of messages).
+      The model tends to classify ambiguous cases here, which
+      is not ideal - ambiguous cases should be URGENT.
+
+  INFO_ONLY:
+    description: >
+      Messages that don't require clinical action. Informational
+      updates, thank you notes, administrative questions, etc.
+    response_sla: "48 hours"
+    examples:
+      - "Thank you for seeing me yesterday, I'm feeling much better"
+      - "Just wanted to let you know I started the new medication"
+      - "What are your office hours?"
+      - "How do I access my medical records?"
+      - "I need to update my insurance information"
+      - "Can you fax my records to my new doctor?"
+      - "Where do I park when I come for my appointment?"
+      - "I wanted to thank the nursing staff for the great care"
+    keywords:
+      - "thank you"
+      - "update"
+      - "office hours"
+      - "records"
+      - "insurance"
+      - "parking"
+    notes: >
+      These can be handled by non-clinical staff in many cases.
+      The model is good at identifying these, which helps
+      reduce the clinical team's message burden.
+
+# Edge cases and labeling guidance:
+#
+# Q: Patient says "I'm in a lot of pain" - URGENT or ROUTINE?
+# A: Depends on context. If acute onset -> URGENT. If chronic and
+#    they're asking about long-term management -> ROUTINE.
+#
+# Q: Patient asks for medication refill but says "I'm completely out"
+# A: If it's a critical medication (insulin, blood pressure, seizure) -> URGENT
+#    If it's a maintenance med with no immediate risk -> ROUTINE
+#
+# Q: Patient reports suicidal ideation in a matter-of-fact way
+# A: Always EMERGENCY, regardless of tone. Follow SI protocol.
+#
+# Q: Message is in a language other than English
+# A: Label as URGENT (we can't assess content, err on side of caution).
+#    TODO: add multilingual support (Spanish at minimum)

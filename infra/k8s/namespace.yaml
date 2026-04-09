@@ -1,0 +1,55 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: meridian
+  labels:
+    app.kubernetes.io/managed-by: helm
+    app.kubernetes.io/part-of: meridian-health
+    compliance: hipaa
+    # Enable Istio sidecar injection for mTLS between services
+    istio-injection: enabled
+  annotations:
+    # Resource quotas are enforced at the namespace level
+    # to prevent any single team from consuming all cluster resources
+    description: "Meridian Health Technologies - Healthcare SaaS Platform"
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: meridian-quota
+  namespace: meridian
+spec:
+  hard:
+    requests.cpu: "32"
+    requests.memory: "64Gi"
+    limits.cpu: "64"
+    limits.memory: "128Gi"
+    persistentvolumeclaims: "20"
+    services.loadbalancers: "5"
+    pods: "100"
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: meridian-limits
+  namespace: meridian
+spec:
+  limits:
+    - default:
+        cpu: "500m"
+        memory: "512Mi"
+      defaultRequest:
+        cpu: "100m"
+        memory: "128Mi"
+      type: Container
+---
+# Network policy: deny all ingress by default (zero-trust)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: meridian
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress

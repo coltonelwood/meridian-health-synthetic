@@ -1,0 +1,105 @@
+{{!-- subject: Appointment Reminder - {{providerName}} on {{formatDate appointmentDate}} --}}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Appointment Reminder</title>
+  <!--
+    NOTE: email HTML is terrible and we should probably use MJML
+    but that's another dependency nobody wants to add right now
+    TODO: make these templates mobile-responsive (NOTIF-234)
+  -->
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5; }
+    .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
+    .header { background-color: #1a5276; color: #ffffff; padding: 24px; text-align: center; }
+    .header img { max-height: 40px; }
+    .content { padding: 32px 24px; color: #333333; line-height: 1.6; }
+    .appointment-card { background-color: #ebf5fb; border-left: 4px solid #1a5276; padding: 20px; margin: 24px 0; border-radius: 4px; }
+    .appointment-card h3 { margin-top: 0; color: #1a5276; }
+    .detail-row { display: flex; margin-bottom: 8px; }
+    .detail-label { font-weight: bold; min-width: 100px; color: #555; }
+    .cta-button { display: inline-block; background-color: #1a5276; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 6px; margin: 16px 0; font-weight: bold; }
+    .footer { background-color: #f8f9fa; padding: 20px 24px; font-size: 12px; color: #888; text-align: center; border-top: 1px solid #eee; }
+    .hipaa-notice { font-size: 10px; color: #aaa; margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <!-- TODO: host logo on CDN instead of inline -->
+      <h2>Meridian Health</h2>
+    </div>
+
+    <div class="content">
+      <p>Dear {{recipientName}},</p>
+
+      <p>This is a friendly reminder about your upcoming appointment:</p>
+
+      <div class="appointment-card">
+        <h3>{{appointmentType}}</h3>
+        <div class="detail-row">
+          <span class="detail-label">Date:</span>
+          <span>{{formatDate appointmentDate}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Time:</span>
+          <span>{{formatTime appointmentTime}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Provider:</span>
+          <span>Dr. {{providerName}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Location:</span>
+          <span>{{locationName}}</span>
+        </div>
+        {{#if locationAddress}}
+        <div class="detail-row">
+          <span class="detail-label">Address:</span>
+          <span>{{locationAddress}}</span>
+        </div>
+        {{/if}}
+        {{#if duration}}
+        <div class="detail-row">
+          <span class="detail-label">Duration:</span>
+          <span>{{duration}} minutes</span>
+        </div>
+        {{/if}}
+      </div>
+
+      {{#if specialInstructions}}
+      <p><strong>Special Instructions:</strong></p>
+      <p>{{specialInstructions}}</p>
+      {{/if}}
+
+      <p>Please arrive 15 minutes early to complete any necessary paperwork.</p>
+
+      {{#if isTelemedicine}}
+      <p><strong>This is a telemedicine appointment.</strong> You can join the video call using the link below:</p>
+      <a href="{{telemedicineLink}}" class="cta-button">Join Video Call</a>
+      {{else}}
+      <a href="https://app.meridianhealth.io/appointments/{{appointmentId}}" class="cta-button">
+        View Appointment Details
+      </a>
+      {{/if}}
+
+      <p>Need to reschedule or cancel? Please call us at {{supportPhone}} or manage your appointment online at least 24 hours in advance to avoid a cancellation fee.</p>
+
+      <p>Thank you for choosing Meridian Health!</p>
+    </div>
+
+    <div class="footer">
+      <p>Meridian Health Technologies | {{supportPhone}} | {{supportEmail}}</p>
+      <p><a href="{{unsubscribeLink}}">Manage notification preferences</a></p>
+      <p class="hipaa-notice">
+        This email may contain Protected Health Information (PHI) and is intended
+        only for the named recipient. If you received this email in error, please
+        delete it and notify us immediately at {{supportEmail}}.
+        &copy; {{currentYear}} Meridian Health Technologies. All rights reserved.
+      </p>
+    </div>
+  </div>
+</body>
+</html>

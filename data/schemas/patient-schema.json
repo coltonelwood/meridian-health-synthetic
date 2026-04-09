@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://meridianhealth.io/schemas/patient.json",
+  "title": "Patient",
+  "description": "Schema for patient demographic and insurance data in the Meridian Health system.",
+  "type": "object",
+  "required": ["id", "mrn", "first_name", "last_name", "date_of_birth", "gender", "status"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^pat-[a-z0-9-]+$",
+      "description": "Unique patient identifier"
+    },
+    "mrn": {
+      "type": "string",
+      "pattern": "^MHT-\\d{6}$",
+      "description": "Medical Record Number"
+    },
+    "first_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "last_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "date_of_birth": {
+      "type": "string",
+      "format": "date",
+      "description": "ISO 8601 date format (YYYY-MM-DD)"
+    },
+    "gender": {
+      "type": "string",
+      "enum": ["male", "female", "other", "unknown"]
+    },
+    "ssn_last_four": {
+      "type": ["string", "null"],
+      "pattern": "^\\d{4}$",
+      "description": "Last four digits of SSN. PHI - handle with care."
+    },
+    "email": {
+      "type": ["string", "null"],
+      "format": "email"
+    },
+    "phone": {
+      "type": ["string", "null"],
+      "pattern": "^\\d{3}-\\d{3}-\\d{4}$"
+    },
+    "address": {
+      "type": "object",
+      "properties": {
+        "street1": { "type": "string", "maxLength": 200 },
+        "street2": { "type": ["string", "null"], "maxLength": 200 },
+        "city": { "type": "string", "maxLength": 100 },
+        "state": { "type": "string", "pattern": "^[A-Z]{2}$" },
+        "zip": { "type": "string", "pattern": "^\\d{5}(-\\d{4})?$" }
+      },
+      "required": ["street1", "city", "state", "zip"]
+    },
+    "emergency_contact": {
+      "type": ["object", "null"],
+      "properties": {
+        "name": { "type": "string" },
+        "relationship": { "type": "string" },
+        "phone": { "type": "string" }
+      },
+      "required": ["name", "phone"]
+    },
+    "insurance": {
+      "type": "object",
+      "properties": {
+        "primary": { "$ref": "#/$defs/insurancePlan" },
+        "secondary": {
+          "oneOf": [
+            { "$ref": "#/$defs/insurancePlan" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "primary_provider_npi": {
+      "type": ["string", "null"],
+      "pattern": "^\\d{10}$",
+      "description": "NPI of the patient's primary care provider"
+    },
+    "preferred_language": {
+      "type": "string",
+      "pattern": "^[a-z]{2}$",
+      "description": "ISO 639-1 language code"
+    },
+    "race": { "type": ["string", "null"] },
+    "ethnicity": { "type": ["string", "null"] },
+    "marital_status": {
+      "type": ["string", "null"],
+      "enum": ["single", "married", "divorced", "widowed", "separated", "domestic_partner", null]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "inactive", "deceased", "merged"],
+      "description": "Patient account status"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "insurancePlan": {
+      "type": "object",
+      "required": ["payer_id", "payer_name", "member_id"],
+      "properties": {
+        "payer_id": { "type": "string" },
+        "payer_name": { "type": "string" },
+        "plan_name": { "type": ["string", "null"] },
+        "member_id": { "type": "string" },
+        "group_number": { "type": ["string", "null"] },
+        "subscriber_name": { "type": "string" },
+        "subscriber_relationship": {
+          "type": "string",
+          "enum": ["self", "spouse", "child", "other"]
+        }
+      }
+    }
+  }
+}

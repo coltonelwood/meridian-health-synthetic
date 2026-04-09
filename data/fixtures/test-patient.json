@@ -1,0 +1,65 @@
+{
+  "$schema": "../schemas/patient-schema.json",
+  "_comment": "Test fixture for patient-related unit tests.",
+  "patient": {
+    "id": "pat-test-00000001",
+    "mrn": "MHT-999001",
+    "first_name": "Test",
+    "last_name": "Patient",
+    "date_of_birth": "1990-01-15",
+    "gender": "female",
+    "ssn_last_four": "0000",
+    "email": "test.patient@example.com",
+    "phone": "617-555-0000",
+    "address": {
+      "street1": "123 Test Street",
+      "street2": "Apt 1",
+      "city": "Boston",
+      "state": "MA",
+      "zip": "02101"
+    },
+    "emergency_contact": {
+      "name": "Emergency Contact",
+      "relationship": "spouse",
+      "phone": "617-555-0001"
+    },
+    "insurance": {
+      "primary": {
+        "payer_id": "BCBS",
+        "payer_name": "Blue Cross Blue Shield of Massachusetts",
+        "plan_name": "PPO Gold",
+        "member_id": "TEST123456",
+        "group_number": "GRP-TEST01",
+        "subscriber_name": "Test Patient",
+        "subscriber_relationship": "self"
+      },
+      "secondary": null
+    },
+    "benefits": {
+      "annual_deductible": 1500.00,
+      "deductible_met_ytd": 750.00,
+      "coinsurance_in_network": 20,
+      "coinsurance_out_of_network": 40,
+      "oop_max": 6000.00,
+      "oop_met_ytd": 1200.00,
+      "copays": {
+        "office_visit": 30.00,
+        "specialist": 50.00,
+        "emergency": 250.00,
+        "urgent_care": 75.00,
+        "lab": 0.00,
+        "imaging": 100.00
+      }
+    },
+    "primary_provider_npi": "1234567890",
+    "preferred_language": "en",
+    "race": "White",
+    "ethnicity": "Not Hispanic or Latino",
+    "marital_status": "married",
+    "status": "active",
+    "email_verified": true,
+    "account_locked": false,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-06-15T10:30:00Z"
+  }
+}

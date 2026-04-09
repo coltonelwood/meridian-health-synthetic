@@ -1,0 +1,375 @@
+{
+  "resourceType": "Bundle",
+  "id": "patient-bundle-sample",
+  "meta": {
+    "lastUpdated": "2024-10-01T12:00:00Z"
+  },
+  "type": "searchset",
+  "total": 3,
+  "link": [
+    {
+      "relation": "self",
+      "url": "https://fhir.meridianhealth.io/r4/Patient?_count=10&_offset=0"
+    }
+  ],
+  "entry": [
+    {
+      "fullUrl": "https://fhir.meridianhealth.io/r4/Patient/pat-001-a7f3b2c1",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-001-a7f3b2c1",
+        "meta": {
+          "versionId": "3",
+          "lastUpdated": "2024-06-15T10:30:00Z",
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient"
+          ]
+        },
+        "identifier": [
+          {
+            "use": "usual",
+            "type": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+                  "code": "MR",
+                  "display": "Medical Record Number"
+                }
+              ]
+            },
+            "system": "https://meridianhealth.io/mrn",
+            "value": "MHT-100001"
+          }
+        ],
+        "active": true,
+        "name": [
+          {
+            "use": "official",
+            "family": "Vasquez",
+            "given": ["Eleanor"]
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "617-555-0101",
+            "use": "home"
+          },
+          {
+            "system": "email",
+            "value": "eleanor.vasquez@example.com",
+            "use": "home"
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1958-03-14",
+        "address": [
+          {
+            "use": "home",
+            "type": "physical",
+            "line": ["42 Beacon Hill Road"],
+            "city": "Boston",
+            "state": "MA",
+            "postalCode": "02108",
+            "country": "US"
+          }
+        ],
+        "maritalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-MaritalStatus",
+              "code": "M",
+              "display": "Married"
+            }
+          ]
+        },
+        "contact": [
+          {
+            "relationship": [
+              {
+                "coding": [
+                  {
+                    "system": "http://terminology.hl7.org/CodeSystem/v2-0131",
+                    "code": "C",
+                    "display": "Emergency Contact"
+                  }
+                ]
+              }
+            ],
+            "name": {
+              "family": "Vasquez",
+              "given": ["Carlos"]
+            },
+            "telecom": [
+              {
+                "system": "phone",
+                "value": "617-555-0102"
+              }
+            ]
+          }
+        ],
+        "communication": [
+          {
+            "language": {
+              "coding": [
+                {
+                  "system": "urn:ietf:bcp:47",
+                  "code": "en",
+                  "display": "English"
+                }
+              ]
+            },
+            "preferred": true
+          }
+        ],
+        "generalPractitioner": [
+          {
+            "reference": "Practitioner/prov-001",
+            "display": "Dr. Sarah Kim"
+          }
+        ],
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+            "extension": [
+              {
+                "url": "ombCategory",
+                "valueCoding": {
+                  "system": "urn:oid:2.16.840.1.113883.6.238",
+                  "code": "2106-3",
+                  "display": "White"
+                }
+              },
+              {
+                "url": "text",
+                "valueString": "Hispanic or Latino"
+              }
+            ]
+          },
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+            "extension": [
+              {
+                "url": "ombCategory",
+                "valueCoding": {
+                  "system": "urn:oid:2.16.840.1.113883.6.238",
+                  "code": "2135-2",
+                  "display": "Hispanic or Latino"
+                }
+              },
+              {
+                "url": "text",
+                "valueString": "Mexican"
+              }
+            ]
+          }
+        ]
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://fhir.meridianhealth.io/r4/Patient/pat-002-b8e4c3d2",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-002-b8e4c3d2",
+        "meta": {
+          "versionId": "2",
+          "lastUpdated": "2024-08-20T14:00:00Z",
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient"
+          ]
+        },
+        "identifier": [
+          {
+            "use": "usual",
+            "type": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+                  "code": "MR",
+                  "display": "Medical Record Number"
+                }
+              ]
+            },
+            "system": "https://meridianhealth.io/mrn",
+            "value": "MHT-100002"
+          }
+        ],
+        "active": true,
+        "name": [
+          {
+            "use": "official",
+            "family": "Okafor",
+            "given": ["James"]
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "617-555-0203",
+            "use": "mobile"
+          },
+          {
+            "system": "email",
+            "value": "james.okafor@example.com",
+            "use": "home"
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1985-11-28",
+        "address": [
+          {
+            "use": "home",
+            "type": "physical",
+            "line": ["789 Commonwealth Avenue", "Unit 3A"],
+            "city": "Boston",
+            "state": "MA",
+            "postalCode": "02215",
+            "country": "US"
+          }
+        ],
+        "maritalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-MaritalStatus",
+              "code": "S",
+              "display": "Never Married"
+            }
+          ]
+        },
+        "communication": [
+          {
+            "language": {
+              "coding": [
+                {
+                  "system": "urn:ietf:bcp:47",
+                  "code": "en",
+                  "display": "English"
+                }
+              ]
+            },
+            "preferred": true
+          }
+        ],
+        "generalPractitioner": [
+          {
+            "reference": "Practitioner/prov-002",
+            "display": "Dr. Raj Patel"
+          }
+        ]
+      },
+      "search": {
+        "mode": "match"
+      }
+    },
+    {
+      "fullUrl": "https://fhir.meridianhealth.io/r4/Patient/pat-003-c9f5d4e3",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-003-c9f5d4e3",
+        "meta": {
+          "versionId": "5",
+          "lastUpdated": "2024-09-10T09:00:00Z",
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient"
+          ]
+        },
+        "identifier": [
+          {
+            "use": "usual",
+            "type": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+                  "code": "MR",
+                  "display": "Medical Record Number"
+                }
+              ]
+            },
+            "system": "https://meridianhealth.io/mrn",
+            "value": "MHT-100003"
+          }
+        ],
+        "active": true,
+        "name": [
+          {
+            "use": "official",
+            "family": "Chen",
+            "given": ["Mei-Lin"]
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "617-555-0305",
+            "use": "home"
+          },
+          {
+            "system": "email",
+            "value": "meiling.chen@example.com",
+            "use": "home"
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1972-07-09",
+        "address": [
+          {
+            "use": "home",
+            "type": "physical",
+            "line": ["15 Harrison Avenue"],
+            "city": "Boston",
+            "state": "MA",
+            "postalCode": "02111",
+            "country": "US"
+          }
+        ],
+        "maritalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-MaritalStatus",
+              "code": "M",
+              "display": "Married"
+            }
+          ]
+        },
+        "communication": [
+          {
+            "language": {
+              "coding": [
+                {
+                  "system": "urn:ietf:bcp:47",
+                  "code": "zh",
+                  "display": "Chinese"
+                }
+              ]
+            },
+            "preferred": true
+          },
+          {
+            "language": {
+              "coding": [
+                {
+                  "system": "urn:ietf:bcp:47",
+                  "code": "en",
+                  "display": "English"
+                }
+              ]
+            },
+            "preferred": false
+          }
+        ],
+        "generalPractitioner": [
+          {
+            "reference": "Practitioner/prov-001",
+            "display": "Dr. Sarah Kim"
+          }
+        ]
+      },
+      "search": {
+        "mode": "match"
+      }
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  // Root TypeScript configuration for the Meridian Health Platform monorepo.
+  // Individual services extend this config with their own tsconfig.json.
+  //
+  // TODO: Upgrade to TypeScript 5.4 -- blocked on ts-jest compatibility (PLAT-4310)
+  // FIXME: Some of these paths are stale after the libs/ reorganization in Q3 2024.
+  //        They still work but the aliases don't match the actual directory names.
+
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "lib": ["ES2022"],
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": false,
+    // ^^^ TODO: Re-enable noUnusedLocals once we clean up the claims-engine
+    //     There are ~200 violations and nobody wants to fix them right now (PLAT-3990)
+    "noUnusedParameters": false,
+    // ^^^ Same story as noUnusedLocals
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": ".",
+    "composite": true,
+    "incremental": true,
+    "skipLibCheck": true,
+    // ^^^ We'd love to turn this off but it adds ~45s to typecheck and breaks
+    //     on some @types/node vs actual node version mismatches
+
+    "baseUrl": ".",
+    "paths": {
+      "@meridian/common": ["libs/common/src"],
+      "@meridian/common/*": ["libs/common/src/*"],
+      "@meridian/db": ["libs/db/src"],
+      "@meridian/db/*": ["libs/db/src/*"],
+      "@meridian/fhir-client": ["libs/fhir-client/src"],
+      "@meridian/fhir-client/*": ["libs/fhir-client/src/*"],
+      "@meridian/hipaa-audit": ["libs/hipaa-audit/src"],
+      "@meridian/hipaa-audit/*": ["libs/hipaa-audit/src/*"],
+      "@meridian/api-client": ["libs/api-client/src"],
+      "@meridian/api-client/*": ["libs/api-client/src/*"],
+      // Legacy alias -- some old code still imports from @meridian/shared
+      // which was renamed to @meridian/common in v3.2
+      "@meridian/shared": ["libs/common/src"],
+      "@meridian/shared/*": ["libs/common/src/*"],
+      "@meridian/testing": ["libs/testing/src"],
+      "@meridian/testing/*": ["libs/testing/src/*"]
+    },
+
+    "typeRoots": [
+      "./node_modules/@types",
+      "./types"
+    ]
+  },
+
+  "include": [
+    "libs/*/src/**/*.ts",
+    "services/*/src/**/*.ts",
+    "types/**/*.d.ts"
+  ],
+
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/*.integration.ts",
+    "**/*.e2e.ts",
+    // Exclude the ML Python code obviously
+    "ml/**",
+    // Exclude the old billing service
+    "services/billing/**",
+    // Exclude archive
+    "archive/**"
+  ],
+
+  "references": [
+    { "path": "libs/common" },
+    { "path": "libs/db" },
+    { "path": "libs/fhir-client" },
+    { "path": "libs/hipaa-audit" }
+    // TODO: Add libs/api-client once it has its own tsconfig
+    // TODO: Add libs/testing
+  ]
+}

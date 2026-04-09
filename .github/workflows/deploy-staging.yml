@@ -1,0 +1,266 @@
+# =============================================================================
+# Deploy to Staging - Meridian Health Platform
+# =============================================================================
+#
+# Deploys services to the staging environment on AWS EKS.
+#
+# Triggers:
+#   - Automatically on push to main (after CI passes)
+#   - Manually via workflow_dispatch (for deploying specific services)
+#
+# NOTE: This replaced the old Jenkins deploy pipeline in March 2024.
+#       The ECS-based deployment was replaced with EKS in Q4 2024.
+# TODO: Add Slack notification on deploy success/failure (PLAT-4050)
+# TODO: Add automated smoke tests after deploy (PLAT-3890)
+
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      services:
+        description: 'Comma-separated list of services to deploy (leave empty for all)'
+        required: false
+        default: ''
+        type: string
+      skip_migrations:
+        description: 'Skip database migrations'
+        required: false
+        default: false
+        type: boolean
+      # TODO: Add an option to deploy a specific git sha instead of HEAD
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+  # Don't cancel in-progress staging deploys -- that can leave things in a bad state
+
+env:
+  AWS_REGION: us-east-1
+  EKS_CLUSTER: meridian-staging
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+  NAMESPACE: meridian-staging
+  ALL_SERVICES: 'auth,claims-engine,ehr-gateway,scheduling,analytics-api,doc-service,notifications'
+
+jobs:
+  # ---- Determine what to deploy ----
+  prepare:
+    name: Prepare Deployment
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.set-services.outputs.services }}
+      sha: ${{ steps.set-sha.outputs.sha }}
+      version: ${{ steps.set-version.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set services to deploy
+        id: set-services
+        run: |
+          if [ -n "${{ inputs.services }}" ]; then
+            echo "services=${{ inputs.services }}" >> $GITHUB_OUTPUT
+          else
+            echo "services=${{ env.ALL_SERVICES }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set SHA
+        id: set-sha
+        run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Set version
+        id: set-version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Deployment summary
+        run: |
+          echo "## Staging Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **SHA** | \`${{ steps.set-sha.outputs.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Version** | \`${{ steps.set-version.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Services** | ${{ steps.set-services.outputs.services }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Skip Migrations** | ${{ inputs.skip_migrations || 'false' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Triggered by** | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+
+  # ---- Run Database Migrations ----
+  migrate:
+    name: Run Migrations
+    runs-on: ubuntu-latest
+    needs: prepare
+    if: inputs.skip_migrations != true
+    environment: staging
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.19.0'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build migration tools
+        run: npm run build:libs
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Run migrations through a bastion host / port forwarding
+      # FIXME: This is fragile. We should run migrations as a Kubernetes Job instead. (PLAT-4200)
+      - name: Run database migrations
+        run: |
+          echo "Running migrations for staging..."
+          npm run db:migrate -- --env=staging
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          # NOTE: Individual service DB URLs are constructed from the base URL
+          # by the migration script. See scripts/db/run-migrations.js
+
+      - name: Verify migrations
+        run: |
+          echo "Verifying migration status..."
+          npm run db:migrate -- --env=staging --status
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+
+  # ---- Build & Push Docker Images ----
+  build:
+    name: Build ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    needs: prepare
+    strategy:
+      matrix:
+        service: ${{ fromJson(format('["{0}"]', join(fromJson(format('["{0}"]', replace(needs.prepare.outputs.services, ',', '","'))), '","'))) }}
+      fail-fast: false
+      # ^^^ Don't fail the whole matrix if one service fails to build.
+      #     We want to deploy what we can.
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: services/${{ matrix.service }}/Dockerfile
+          push: true
+          tags: |
+            ${{ env.ECR_REGISTRY }}/meridian/${{ matrix.service }}:${{ needs.prepare.outputs.sha }}
+            ${{ env.ECR_REGISTRY }}/meridian/${{ matrix.service }}:staging-latest
+          build-args: |
+            NODE_ENV=production
+            GIT_SHA=${{ needs.prepare.outputs.sha }}
+            VERSION=${{ needs.prepare.outputs.version }}
+
+  # ---- Deploy to EKS ----
+  deploy:
+    name: Deploy to EKS
+    runs-on: ubuntu-latest
+    needs: [prepare, migrate, build]
+    # Run even if migrate was skipped
+    if: always() && needs.build.result == 'success'
+    environment:
+      name: staging
+      url: https://staging.meridianhealth.io
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER }} --region ${{ env.AWS_REGION }}
+
+      - name: Deploy services
+        run: |
+          SERVICES="${{ needs.prepare.outputs.services }}"
+          SHA="${{ needs.prepare.outputs.sha }}"
+
+          IFS=',' read -ra SERVICE_ARRAY <<< "$SERVICES"
+          for service in "${SERVICE_ARRAY[@]}"; do
+            echo "Deploying $service..."
+            kubectl set image deployment/${service} \
+              ${service}=${{ env.ECR_REGISTRY }}/meridian/${service}:${SHA} \
+              -n ${{ env.NAMESPACE }}
+
+            echo "Waiting for rollout..."
+            kubectl rollout status deployment/${service} \
+              -n ${{ env.NAMESPACE }} \
+              --timeout=300s
+          done
+
+      # TODO: Add automated smoke tests here (PLAT-3890)
+      # - name: Run smoke tests
+      #   run: ./scripts/test/smoke-test-staging.sh
+
+      - name: Deployment complete
+        run: |
+          echo "## Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All services deployed to staging successfully." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Staging URL: https://staging.meridianhealth.io" >> $GITHUB_STEP_SUMMARY
+
+  # ---- Notify ----
+  notify:
+    name: Notify
+    runs-on: ubuntu-latest
+    needs: [prepare, deploy]
+    if: always()
+
+    steps:
+      # TODO: Replace with proper Slack notification action (PLAT-4050)
+      # For now this just posts to the GitHub Actions summary
+      - name: Post deployment status
+        run: |
+          if [ "${{ needs.deploy.result }}" == "success" ]; then
+            echo "Staging deployment succeeded for SHA ${{ needs.prepare.outputs.sha }}"
+          else
+            echo "::error::Staging deployment FAILED for SHA ${{ needs.prepare.outputs.sha }}"
+          fi
+
+      # - name: Slack notification
+      #   uses: slackapi/slack-github-action@v1
+      #   with:
+      #     channel-id: ${{ secrets.SLACK_DEPLOY_CHANNEL_ID }}
+      #     payload: |
+      #       {
+      #         "text": "Staging deploy ${{ needs.deploy.result }}: ${{ needs.prepare.outputs.sha }}",
+      #         "blocks": [...]
+      #       }
+      #   env:
+      #     SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

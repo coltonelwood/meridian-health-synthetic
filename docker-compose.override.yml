@@ -1,0 +1,144 @@
+# docker-compose.override.yml - Local development overrides
+#
+# This file is automatically loaded by Docker Compose alongside docker-compose.yml
+# It adds debug ports, source mounts, and dev-friendly settings
+#
+# NOTE: Do NOT commit changes to this file unless they benefit the whole team.
+#       For personal overrides, use docker-compose.local.yml:
+#         docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.local.yml up
+#
+# FIXME: The volume mounts make startup slow on macOS. We should look into
+#        using docker-sync or mutagen for the services you're actively developing.
+#        See: https://meridianhealth.atlassian.net/browse/PLAT-2994
+
+services:
+  auth:
+    volumes:
+      - ./services/auth:/app/services/auth
+      - ./libs:/app/libs
+      - /app/services/auth/node_modules
+      - /app/node_modules
+    ports:
+      - "9221:9229"   # Node.js debug port
+    command: npx nodemon --inspect=0.0.0.0:9229 -e ts,json --exec ts-node src/index.ts
+    environment:
+      - NODE_OPTIONS=--enable-source-maps
+
+  claims-engine:
+    volumes:
+      - ./services/claims-engine:/app/services/claims-engine
+      - ./libs:/app/libs
+      - /app/services/claims-engine/node_modules
+      - /app/node_modules
+    ports:
+      - "9222:9229"   # Node.js debug port
+    command: npx nodemon --inspect=0.0.0.0:9229 -e ts,json --exec ts-node src/index.ts
+    environment:
+      - NODE_OPTIONS=--enable-source-maps
+      - CLAIMS_MOCK_CLEARINGHOUSE=true
+
+  ehr-gateway:
+    volumes:
+      - ./services/ehr-gateway:/app/services/ehr-gateway
+      - ./libs:/app/libs
+      - /app/services/ehr-gateway/node_modules
+      - /app/node_modules
+    ports:
+      - "9223:9229"   # Node.js debug port
+    command: npx nodemon --inspect=0.0.0.0:9229 -e ts,json --exec ts-node src/index.ts
+    environment:
+      - NODE_OPTIONS=--enable-source-maps
+      - FHIR_VALIDATION_STRICT=false
+
+  scheduling:
+    volumes:
+      - ./services/scheduling:/app/services/scheduling
+      - ./libs:/app/libs
+      - /app/services/scheduling/node_modules
+      - /app/node_modules
+    ports:
+      - "9224:9229"   # Node.js debug port
+    command: npx nodemon --inspect=0.0.0.0:9229 -e ts,json --exec ts-node src/index.ts
+
+  analytics-api:
+    volumes:
+      - ./services/analytics-api:/app/services/analytics-api
+      - ./libs:/app/libs
+      - /app/services/analytics-api/node_modules
+      - /app/node_modules
+    ports:
+      - "9225:9229"   # Node.js debug port
+    command: npx nodemon --inspect=0.0.0.0:9229 -e ts,json --exec ts-node src/index.ts
+    environment:
+      - CACHE_TTL=0
+
+  doc-service:
+    volumes:
+      - ./services/doc-service:/app/services/doc-service
+      - ./libs:/app/libs
+      - /app/services/doc-service/node_modules
+      - /app/node_modules
+      - ./tmp/uploads:/tmp/uploads    # local upload staging dir
+    ports:
+      - "9226:9229"   # Node.js debug port
+    command: npx nodemon --inspect=0.0.0.0:9229 -e ts,json --exec ts-node src/index.ts
+    environment:
+      - OCR_PROVIDER=mock
+      - MAX_UPLOAD_SIZE_MB=100
+
+  notifications:
+    volumes:
+      - ./services/notifications:/app/services/notifications
+      - ./libs:/app/libs
+      - /app/services/notifications/node_modules
+      - /app/node_modules
+    ports:
+      - "9227:9229"   # Node.js debug port
+    command: npx nodemon --inspect=0.0.0.0:9229 -e ts,json --exec ts-node src/index.ts
+    environment:
+      - NOTIFICATION_DRY_RUN=true
+      - EMAIL_PREVIEW_ENABLED=true
+      - EMAIL_PREVIEW_DIR=/tmp/email-previews
+
+  postgres:
+    ports:
+      - "5432:5432"
+    # HACK: Increase shared_buffers for local dev, the default 128MB is too low
+    #       for running all the service DBs. -- @rafael.g 2024-03-12
+    command: >
+      postgres
+      -c shared_buffers=512MB
+      -c max_connections=200
+      -c log_statement=all
+      -c log_min_duration_statement=100
+
+  redis:
+    ports:
+      - "6379:6379"
+    # Enable keyspace notifications for dev debugging
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --notify-keyspace-events KEA
+
+  rabbitmq:
+    ports:
+      - "5672:5672"
+      - "15672:15672"   # Management UI: http://localhost:15672
+
+  elasticsearch:
+    ports:
+      - "9200:9200"
+    environment:
+      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"   # Lower memory for dev
+
+  minio:
+    ports:
+      - "9000:9000"
+      - "9001:9001"     # MinIO Console: http://localhost:9001
+
+  # hapi-fhir override -- enable verbose logging
+  hapi-fhir:
+    environment:
+      hapi.fhir.default_encoding: json
+      hapi.fhir.fhir_version: R4
+      hapi.fhir.allow_multiple_delete: "true"
+      hapi.fhir.openapi_enabled: "true"
+      logging.level.ca.uhn.fhir: DEBUG

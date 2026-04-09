@@ -1,0 +1,193 @@
+{
+  "$schema": "https://meridianhealth.io/schemas/feature-flags.json",
+  "_comment": "Feature flag configuration - Meridian Health Technologies",
+  "_lastUpdated": "2026-01-15",
+  "_updatedBy": "ajiang",
+
+  "flags": {
+    "new-scheduling-ui": {
+      "description": "New scheduling interface with drag-and-drop and multi-provider view",
+      "enabled": true,
+      "rolloutPercentage": 100,
+      "targeting": {
+        "type": "percentage",
+        "seed": "user_id"
+      },
+      "createdAt": "2025-03-15",
+      "createdBy": "schen",
+      "notes": "Fully rolled out as of 2025-09-01. Can probably remove this flag."
+    },
+
+    "patient-portal-v2": {
+      "description": "Redesigned patient portal with mobile-first approach",
+      "enabled": true,
+      "rolloutPercentage": 75,
+      "targeting": {
+        "type": "percentage",
+        "seed": "patient_id"
+      },
+      "excludeOrganizations": ["org-legacy-001", "org-legacy-002"],
+      "createdAt": "2025-08-20",
+      "createdBy": "mrodriguez",
+      "notes": "Ramping up. At 75% since Dec 2025. Some legacy orgs have custom CSS that breaks v2."
+    },
+
+    "auto-eligibility-check": {
+      "description": "Automatically run eligibility check when appointment is booked",
+      "enabled": true,
+      "rolloutPercentage": 100,
+      "targeting": {
+        "type": "percentage",
+        "seed": "organization_id"
+      },
+      "createdAt": "2024-11-01",
+      "createdBy": "rjohnson",
+      "notes": "Fully rolled out. TODO: remove flag and make this default behavior."
+    },
+
+    "claim-auto-submit": {
+      "description": "Automatically submit claims when all required fields are complete",
+      "enabled": true,
+      "rolloutPercentage": 30,
+      "targeting": {
+        "type": "percentage",
+        "seed": "organization_id"
+      },
+      "allowList": ["org-premium-001", "org-premium-002", "org-demo-001"],
+      "createdAt": "2025-10-15",
+      "createdBy": "ajiang",
+      "notes": "Active A/B test. See experiments/ab-tests/claim-auto-submit-test.ts for metrics."
+    },
+
+    "dark-mode": {
+      "description": "Dark mode for the provider portal",
+      "enabled": false,
+      "rolloutPercentage": 0,
+      "targeting": {
+        "type": "user_list",
+        "userIds": ["user-ajiang", "user-schen", "user-mrodriguez"]
+      },
+      "createdAt": "2023-12-01",
+      "createdBy": "ajiang",
+      "notes": "Internal only. We built this during a hack week. Design team hasn't approved it for general release."
+    },
+
+    "fhir-r4-api": {
+      "description": "FHIR R4 API endpoints (replacing our custom REST API)",
+      "enabled": true,
+      "rolloutPercentage": 50,
+      "targeting": {
+        "type": "property",
+        "property": "organization.settings.api_version",
+        "operator": "equals",
+        "value": "fhir-r4"
+      },
+      "createdAt": "2025-06-01",
+      "createdBy": "dholmes",
+      "notes": "Orgs that have opted into FHIR R4 get the new endpoints. Others stay on v2 REST."
+    },
+
+    "ai-coding-suggestions": {
+      "description": "AI-powered ICD-10 and CPT code suggestions during encounter documentation",
+      "enabled": true,
+      "rolloutPercentage": 20,
+      "targeting": {
+        "type": "percentage",
+        "seed": "provider_id"
+      },
+      "createdAt": "2025-11-10",
+      "createdBy": "schen",
+      "notes": "ML team experiment. Using fine-tuned model for code suggestions. Accuracy metrics in /ml/experiments/coding-accuracy.ipynb"
+    },
+
+    "batch-claim-processing": {
+      "description": "Process claims in batches instead of one-at-a-time",
+      "enabled": true,
+      "rolloutPercentage": 100,
+      "targeting": {
+        "type": "percentage",
+        "seed": "organization_id"
+      },
+      "createdAt": "2024-04-15",
+      "createdBy": "kpark",
+      "notes": "Fully rolled out since July 2024. This should have been removed ages ago."
+    },
+
+    "hl7-fhir-bridge": {
+      "description": "Bridge for translating HL7v2 messages to FHIR resources",
+      "enabled": true,
+      "rolloutPercentage": 100,
+      "targeting": {
+        "type": "organization_list",
+        "organizationIds": ["org-hospital-001", "org-hospital-002", "org-hospital-003"]
+      },
+      "createdAt": "2023-08-20",
+      "createdBy": "dholmes",
+      "notes": "Only for hospital orgs that send HL7v2. Flag is stale - this is just how it works now. Nobody wants to touch the HL7 code."
+    },
+
+    "maintenance-mode": {
+      "description": "Kill switch - shows maintenance page to all users",
+      "enabled": false,
+      "rolloutPercentage": 100,
+      "targeting": {
+        "type": "kill_switch"
+      },
+      "createdAt": "2023-03-01",
+      "createdBy": "kpark",
+      "notes": "EMERGENCY USE ONLY. Enable this during planned downtime or critical incidents. Bypassed by admin users."
+    },
+
+    "two-factor-enforcement": {
+      "description": "Require 2FA for all users (not just admins)",
+      "enabled": true,
+      "rolloutPercentage": 100,
+      "targeting": {
+        "type": "percentage",
+        "seed": "organization_id"
+      },
+      "createdAt": "2024-01-15",
+      "createdBy": "kpark",
+      "notes": "Compliance requirement. Fully enforced since March 2024. DO NOT DISABLE."
+    },
+
+    "enhanced-audit-logging": {
+      "description": "Detailed audit logging for PHI access",
+      "enabled": true,
+      "rolloutPercentage": 100,
+      "targeting": {
+        "type": "percentage",
+        "seed": "user_id"
+      },
+      "createdAt": "2023-06-01",
+      "createdBy": "kpark",
+      "notes": "This has been on for over 2 years. It's not really a feature flag anymore, it's just how the system works. Removing would be a compliance violation."
+    },
+
+    "telehealth-waiting-room": {
+      "description": "Virtual waiting room for telehealth appointments",
+      "enabled": false,
+      "rolloutPercentage": 0,
+      "targeting": {
+        "type": "percentage",
+        "seed": "provider_id"
+      },
+      "createdAt": "2023-11-15",
+      "createdBy": "schen",
+      "notes": "This was built during COVID but the third-party video service we integrated with (MedVideo) shut down in 2024. We switched to Twilio but never rebuilt the waiting room feature. Keeping the flag in case we revisit."
+    },
+
+    "real-time-benefits-check": {
+      "description": "Real-time pharmacy benefits check during prescribing",
+      "enabled": true,
+      "rolloutPercentage": 60,
+      "targeting": {
+        "type": "percentage",
+        "seed": "organization_id"
+      },
+      "createdAt": "2025-09-01",
+      "createdBy": "mrodriguez",
+      "notes": "Integrates with Surescripts RTBC. Ramping slowly because the API has rate limits and costs per-transaction."
+    }
+  }
+}

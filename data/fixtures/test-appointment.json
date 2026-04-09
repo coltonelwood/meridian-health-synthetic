@@ -1,0 +1,71 @@
+{
+  "$schema": "../schemas/appointment-schema.json",
+  "_comment": "Test fixture for appointment-related unit tests.",
+  "appointment": {
+    "id": "appt-test-00000001",
+    "patient_id": "pat-test-00000001",
+    "patient_mrn": "MHT-999001",
+    "patient_name": {
+      "first": "Test",
+      "last": "Patient"
+    },
+    "provider_id": "prov-001",
+    "provider_npi": "1234567890",
+    "provider_name": "Dr. Sarah Kim",
+    "facility": {
+      "id": "fac-001",
+      "name": "Meridian Health - Back Bay",
+      "address": {
+        "street1": "100 Boylston Street",
+        "street2": "Suite 300",
+        "city": "Boston",
+        "state": "MA",
+        "zip": "02116"
+      }
+    },
+    "appointment_type": {
+      "code": "FU",
+      "label": "Follow-up Visit",
+      "duration_minutes": 20
+    },
+    "start_time": "2024-11-15T10:00:00-05:00",
+    "end_time": "2024-11-15T10:20:00-05:00",
+    "timezone": "America/New_York",
+    "status": "confirmed",
+    "booking_method": "online",
+    "reason_for_visit": "Follow-up for hypertension management",
+    "chief_complaint": null,
+    "diagnosis_codes": ["I10"],
+    "is_telehealth": false,
+    "telehealth_link": null,
+    "referral_number": null,
+    "prior_authorization": null,
+    "insurance_verified": true,
+    "copay_amount": 30.00,
+    "copay_collected": false,
+    "check_in_time": null,
+    "check_out_time": null,
+    "no_show": false,
+    "cancellation_reason": null,
+    "patient_instructions": "Please bring a list of current medications. Fast for 12 hours if lab work was ordered.",
+    "internal_notes": "Patient requested morning appointment. Needs BP check and med review.",
+    "reminders": [
+      {
+        "type": "email",
+        "scheduled_at": "2024-11-14T10:00:00-05:00",
+        "sent_at": null,
+        "status": "pending"
+      },
+      {
+        "type": "sms",
+        "scheduled_at": "2024-11-15T07:00:00-05:00",
+        "sent_at": null,
+        "status": "pending"
+      }
+    ],
+    "recurring": null,
+    "created_at": "2024-10-20T14:30:00Z",
+    "updated_at": "2024-10-20T14:30:00Z",
+    "created_by": "patient-portal"
+  }
+}

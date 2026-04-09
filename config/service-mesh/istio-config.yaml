@@ -1,0 +1,251 @@
+# Istio Service Mesh Configuration
+# Meridian Health Technologies
+#
+# This configures service-to-service communication policies including
+# mTLS, retries, timeouts, and circuit breakers.
+#
+# Last updated: 2025-02
+# Owner: Platform Team (Tom Kowalski)
+
+---
+# Namespace-wide mTLS policy
+# All services in the production namespace must use mutual TLS
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: production
+spec:
+  mtls:
+    mode: STRICT
+
+---
+# Destination rules define traffic policies per service
+# These apply to all traffic destined for each service
+
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: auth-service
+  namespace: production
+spec:
+  host: auth-service.production.svc.cluster.local
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 5s
+      http:
+        h2UpgradePolicy: DEFAULT
+        maxRequestsPerConnection: 100
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+    tls:
+      mode: ISTIO_MUTUAL
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: patient-service
+  namespace: production
+spec:
+  host: patient-service.production.svc.cluster.local
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 200
+        connectTimeout: 5s
+      http:
+        maxRequestsPerConnection: 50
+    outlierDetection:
+      consecutive5xxErrors: 3
+      interval: 15s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 30
+    tls:
+      mode: ISTIO_MUTUAL
+    loadBalancer:
+      simple: LEAST_REQUEST
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: scheduling-service
+  namespace: production
+spec:
+  host: scheduling-service.production.svc.cluster.local
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 150
+        connectTimeout: 3s
+      http:
+        maxRequestsPerConnection: 100
+    outlierDetection:
+      consecutive5xxErrors: 3
+      interval: 15s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 30
+    tls:
+      mode: ISTIO_MUTUAL
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: billing-service
+  namespace: production
+spec:
+  host: billing-service.production.svc.cluster.local
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 10s
+      http:
+        maxRequestsPerConnection: 20
+    # Billing calculations can be slow for complex claims
+    # More lenient timeout and circuit breaker settings
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 60s
+      baseEjectionTime: 60s
+      maxEjectionPercent: 25
+    tls:
+      mode: ISTIO_MUTUAL
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: claims-service
+  namespace: production
+spec:
+  host: claims-service.production.svc.cluster.local
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 150
+        connectTimeout: 10s
+      http:
+        maxRequestsPerConnection: 50
+        maxRetries: 3
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 60s
+      maxEjectionPercent: 30
+    tls:
+      mode: ISTIO_MUTUAL
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: fhir-facade
+  namespace: production
+spec:
+  host: fhir-facade.production.svc.cluster.local
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 50
+        connectTimeout: 10s
+      http:
+        maxRequestsPerConnection: 10
+    # FHIR Bulk Export can take a long time
+    outlierDetection:
+      consecutive5xxErrors: 3
+      interval: 30s
+      baseEjectionTime: 60s
+      maxEjectionPercent: 50
+    tls:
+      mode: ISTIO_MUTUAL
+
+---
+# Virtual Service for retry policies
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: patient-service-routes
+  namespace: production
+spec:
+  hosts:
+    - patient-service.production.svc.cluster.local
+  http:
+    - route:
+        - destination:
+            host: patient-service.production.svc.cluster.local
+      timeout: 10s
+      retries:
+        attempts: 3
+        perTryTimeout: 5s
+        retryOn: 5xx,reset,connect-failure,retriable-4xx
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: claims-service-routes
+  namespace: production
+spec:
+  hosts:
+    - claims-service.production.svc.cluster.local
+  http:
+    # Claim submission endpoint gets longer timeout
+    - match:
+        - uri:
+            prefix: /v2/claims/batch
+      route:
+        - destination:
+            host: claims-service.production.svc.cluster.local
+      timeout: 120s
+      retries:
+        attempts: 2
+        perTryTimeout: 60s
+        retryOn: 5xx,reset,connect-failure
+    # Default route
+    - route:
+        - destination:
+            host: claims-service.production.svc.cluster.local
+      timeout: 30s
+      retries:
+        attempts: 3
+        perTryTimeout: 10s
+        retryOn: 5xx,reset,connect-failure
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: fhir-facade-routes
+  namespace: production
+spec:
+  hosts:
+    - fhir-facade.production.svc.cluster.local
+  http:
+    # Bulk export can take up to 10 minutes
+    - match:
+        - uri:
+            prefix: /r4/$export
+      route:
+        - destination:
+            host: fhir-facade.production.svc.cluster.local
+      timeout: 600s
+      retries:
+        attempts: 1
+        retryOn: reset,connect-failure
+    # Standard FHIR requests
+    - route:
+        - destination:
+            host: fhir-facade.production.svc.cluster.local
+      timeout: 30s
+      retries:
+        attempts: 2
+        perTryTimeout: 15s
+        retryOn: 5xx,reset,connect-failure

@@ -1,0 +1,141 @@
+# Feature configuration for readmission model v2
+# Updated: 2025-10-01
+#
+# Set enabled: false to exclude a feature from the model.
+# Features are grouped by category for readability.
+
+model_version: "2.1.0"
+target: readmitted_30d
+
+features:
+  # --- Demographics ---
+  - name: age
+    type: numeric
+    enabled: true
+    description: "Patient age at admission"
+
+  - name: is_male
+    type: binary
+    enabled: true
+    description: "Patient sex = male"
+
+  # NOTE: race and ethnicity intentionally excluded per AI ethics policy
+  # - name: race
+  #   type: categorical
+  #   enabled: false
+  #   description: "DO NOT USE - retained for bias auditing only"
+
+  # --- Insurance ---
+  - name: insurance_COMMERCIAL
+    type: binary
+    enabled: true
+
+  - name: insurance_MEDICAID
+    type: binary
+    enabled: true
+
+  - name: insurance_MEDICARE
+    type: binary
+    enabled: true
+
+  - name: insurance_SELF_PAY
+    type: binary
+    enabled: true
+
+  # - name: insurance_TRICARE
+  #   type: binary
+  #   enabled: true
+  #   # disabled: too few samples (<200) in training set
+
+  # --- Length of Stay ---
+  - name: los_days
+    type: numeric
+    enabled: true
+    description: "Length of stay in days"
+
+  - name: los_log
+    type: numeric
+    enabled: true
+    description: "Log-transformed LOS"
+
+  - name: los_gt_7
+    type: binary
+    enabled: true
+
+  - name: los_gt_14
+    type: binary
+    enabled: true
+
+  # --- Prior Utilization ---
+  - name: prior_admissions_6mo
+    type: numeric
+    enabled: true
+    description: "Number of admissions in prior 6 months"
+
+  - name: prior_admissions_all
+    type: numeric
+    enabled: true
+
+  - name: is_frequent_flyer
+    type: binary
+    enabled: true
+    description: "2+ admissions in prior 6 months"
+
+  # --- Clinical ---
+  - name: comorbidity_score
+    type: numeric
+    enabled: true
+    description: "Weighted Elixhauser-lite score"
+
+  - name: n_diagnoses
+    type: numeric
+    enabled: true
+
+  - name: is_high_risk_drg
+    type: binary
+    enabled: true
+
+  - name: is_emergency_admit
+    type: binary
+    enabled: true
+
+  # - name: drg_code
+  #   type: categorical
+  #   enabled: false
+  #   # disabled: too many categories (700+), need to group first
+
+  # - name: dx_category
+  #   type: categorical
+  #   enabled: false
+  #   # disabled: same issue as drg_code, too many categories
+
+  # --- Discharge ---
+  - name: discharged_weekend
+    type: binary
+    enabled: true
+    description: "Discharged on Saturday or Sunday"
+
+  # - name: discharge_month
+  #   type: numeric
+  #   enabled: false
+  #   # testing showed minimal lift from seasonality
+
+  # discharge disposition dummies are auto-generated
+  # we include all of them
+  - name: "disch_*"
+    type: binary
+    enabled: true
+    description: "Discharge disposition one-hot encoded"
+
+  # --- EXPERIMENTAL (not yet validated) ---
+  # - name: lab_hemoglobin_last
+  #   type: numeric
+  #   enabled: false
+  #   description: "Last hemoglobin value before discharge"
+  #   notes: "Waiting on lab data pipeline - ETA Q1 2026"
+
+  # - name: med_count_discharge
+  #   type: numeric
+  #   enabled: false
+  #   description: "Number of medications at discharge"
+  #   notes: "Polypharmacy signal - needs medication data"

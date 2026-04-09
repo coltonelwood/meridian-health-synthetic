@@ -1,0 +1,156 @@
+# =============================================================================
+# PagerDuty Escalation Policies
+# =============================================================================
+#
+# On-call schedules and escalation policies for Meridian Health.
+#
+# Current on-call rotation:
+# - Platform team: weekly rotation (Mon 9am to Mon 9am ET)
+# - Revenue Cycle: business hours only (M-F 7am-7pm ET)
+#   After hours revenue cycle issues go to platform team
+# - Security: always on-call (required for HIPAA breach response)
+#
+# Escalation SLAs:
+# - Critical: 5 min ack, 15 min response
+# - Warning: 30 min ack, 2 hour response
+# - Info: next business day
+
+escalation_policies:
+  - name: Platform Engineering
+    id: P_PLATFORM
+    description: "Platform and infrastructure issues"
+    num_loops: 3
+    rules:
+      - escalation_delay_in_minutes: 5
+        targets:
+          - type: schedule_reference
+            id: SCHED_PLATFORM_PRIMARY
+      - escalation_delay_in_minutes: 15
+        targets:
+          - type: schedule_reference
+            id: SCHED_PLATFORM_SECONDARY
+      - escalation_delay_in_minutes: 30
+        targets:
+          - type: user_reference
+            id: USER_VP_ENGINEERING
+
+  - name: Revenue Cycle
+    id: P_REVCYCLE
+    description: "Claims, billing, and payment issues"
+    num_loops: 2
+    rules:
+      - escalation_delay_in_minutes: 15
+        targets:
+          - type: schedule_reference
+            id: SCHED_REVCYCLE_PRIMARY
+      - escalation_delay_in_minutes: 30
+        targets:
+          - type: schedule_reference
+            id: SCHED_REVCYCLE_SECONDARY
+      - escalation_delay_in_minutes: 60
+        targets:
+          - type: user_reference
+            id: USER_DIR_REVCYCLE
+
+  - name: Security Response
+    id: P_SECURITY
+    description: "Security incidents and HIPAA breach response"
+    num_loops: 5  # Security incidents must ALWAYS be acknowledged
+    rules:
+      - escalation_delay_in_minutes: 5
+        targets:
+          - type: schedule_reference
+            id: SCHED_SECURITY_PRIMARY
+      - escalation_delay_in_minutes: 10
+        targets:
+          - type: schedule_reference
+            id: SCHED_SECURITY_SECONDARY
+      - escalation_delay_in_minutes: 15
+        targets:
+          - type: user_reference
+            id: USER_CISO
+      - escalation_delay_in_minutes: 20
+        targets:
+          - type: user_reference
+            id: USER_CTO
+
+schedules:
+  - name: Platform Primary On-Call
+    id: SCHED_PLATFORM_PRIMARY
+    time_zone: America/New_York
+    layers:
+      - name: Weekly Rotation
+        start: "2026-01-05T09:00:00-05:00"
+        rotation_virtual_start: "2026-01-05T09:00:00-05:00"
+        rotation_turn_length_seconds: 604800  # 1 week
+        users:
+          - USER_PLATFORM_1   # Sarah Chen
+          - USER_PLATFORM_2   # Marcus Johnson
+          - USER_PLATFORM_3   # Priya Patel
+          - USER_PLATFORM_4   # James O'Brien
+
+  - name: Platform Secondary On-Call
+    id: SCHED_PLATFORM_SECONDARY
+    time_zone: America/New_York
+    layers:
+      - name: Weekly Rotation (offset by 1)
+        start: "2026-01-12T09:00:00-05:00"
+        rotation_virtual_start: "2026-01-12T09:00:00-05:00"
+        rotation_turn_length_seconds: 604800
+        users:
+          - USER_PLATFORM_2
+          - USER_PLATFORM_3
+          - USER_PLATFORM_4
+          - USER_PLATFORM_1
+
+  - name: Revenue Cycle Primary
+    id: SCHED_REVCYCLE_PRIMARY
+    time_zone: America/New_York
+    layers:
+      - name: Business Hours Rotation
+        start: "2026-01-05T07:00:00-05:00"
+        rotation_virtual_start: "2026-01-05T07:00:00-05:00"
+        rotation_turn_length_seconds: 604800
+        restrictions:
+          - type: daily_restriction
+            start_time_of_day: "07:00:00"
+            duration_seconds: 43200  # 12 hours (7am-7pm)
+            start_day_of_week: 1     # Monday
+        users:
+          - USER_REVCYCLE_1   # Amanda Torres
+          - USER_REVCYCLE_2   # David Kim
+
+  - name: Security Primary
+    id: SCHED_SECURITY_PRIMARY
+    time_zone: America/New_York
+    layers:
+      - name: "24/7 Rotation"
+        start: "2026-01-05T00:00:00-05:00"
+        rotation_virtual_start: "2026-01-05T00:00:00-05:00"
+        rotation_turn_length_seconds: 604800
+        users:
+          - USER_SECURITY_1   # Alex Rivera
+          - USER_SECURITY_2   # Robin Kowalski
+
+services:
+  - name: "Meridian - Patient API"
+    id: SVC_PATIENT_API
+    escalation_policy: P_PLATFORM
+    alert_creation: create_alerts_and_incidents
+
+  - name: "Meridian - Claims Engine"
+    id: SVC_CLAIMS_ENGINE
+    escalation_policy: P_REVCYCLE
+    alert_creation: create_alerts_and_incidents
+
+  - name: "Meridian - Database"
+    id: SVC_DATABASE
+    escalation_policy: P_PLATFORM
+    alert_creation: create_alerts_and_incidents
+
+  - name: "Meridian - Security Alerts"
+    id: SVC_SECURITY
+    escalation_policy: P_SECURITY
+    alert_creation: create_alerts_and_incidents
+    # Security alerts are never auto-resolved
+    auto_resolve_timeout: null

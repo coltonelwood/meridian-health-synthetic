@@ -1,0 +1,94 @@
+{
+  "name": "@meridian/platform",
+  "version": "4.12.0",
+  "private": true,
+  "description": "Meridian Health Technologies - Patient Management & Claims Processing Platform",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:meridian-health/platform.git"
+  },
+  "workspaces": [
+    "services/*",
+    "libs/*",
+    "internal-tools/*"
+  ],
+  "engines": {
+    "node": ">=18.19.0",
+    "npm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "dev:auth": "npm run dev -w services/auth",
+    "dev:claims": "npm run dev -w services/claims-engine",
+    "dev:ehr": "npm run dev -w services/ehr-gateway",
+    "dev:scheduling": "npm run dev -w services/scheduling",
+    "dev:analytics": "npm run dev -w services/analytics-api",
+    "dev:docs": "npm run dev -w services/doc-service",
+    "dev:notifications": "npm run dev -w services/notifications",
+    "build": "npm run build --workspaces --if-present",
+    "build:libs": "npm run build -w libs/common -w libs/db -w libs/fhir-client -w libs/hipaa-audit",
+    "test": "jest --config jest.config.js",
+    "test:unit": "jest --config jest.config.js --testPathPattern='.*\\.test\\.ts$'",
+    "test:integration": "jest --config jest.config.js --testPathPattern='.*\\.integration\\.ts$' --runInBand",
+    "test:e2e": "playwright test",
+    "test:coverage": "jest --config jest.config.js --coverage --coverageReporters=text-summary --coverageReporters=lcov",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx --max-warnings 0",
+    "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "db:migrate": "node scripts/db/run-migrations.js",
+    "db:migrate:create": "node scripts/db/create-migration.js",
+    "db:seed": "node scripts/db/seed-dev.js",
+    "db:reset": "node scripts/db/reset-dev.js",
+    "seed:dev": "npm run db:seed",
+    "codegen:fhir": "node scripts/codegen/fhir-types.js",
+    "codegen:openapi": "openapi-generator-cli generate -i docs/openapi/merged.yml -g typescript-axios -o libs/api-client/src/generated",
+    "docker:build": "docker compose build",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "clean": "npm run clean --workspaces --if-present && rm -rf node_modules",
+    "prepare": "husky install",
+    "postinstall": "npm run build:libs"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^18.19.14",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-jest": "^27.9.0",
+    "eslint-plugin-security": "^2.1.1",
+    "husky": "^9.0.7",
+    "jest": "^29.7.0",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.2.4",
+    "ts-jest": "^29.1.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3",
+    "@playwright/test": "^1.41.1",
+    "concurrently": "^8.2.2",
+    "dotenv-cli": "^7.3.0",
+    "openapi-generator-cli": "^2.7.0"
+  },
+  "dependencies": {
+    "tslib": "^2.6.2"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix --max-warnings 0",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "overrides": {
+    "semver": "^7.5.4",
+    "xml2js": "^0.6.2",
+    "jsonwebtoken": "^9.0.0"
+  }
+}

@@ -1,0 +1,436 @@
+{
+  "_comment": "Seed data for development and testing. All NPIs and data are synthetic.",
+  "_generated": "2024-09-15",
+  "providers": [
+    {
+      "id": "prov-001",
+      "npi": "1234567890",
+      "first_name": "Sarah",
+      "last_name": "Kim",
+      "credentials": "MD, FACP",
+      "specialty": "Internal Medicine",
+      "taxonomy_code": "207R00000X",
+      "email": "sarah.kim@meridianhealth.io",
+      "phone": "617-555-3001",
+      "accepting_new_patients": true,
+      "practice_location": {
+        "name": "Meridian Health - Back Bay",
+        "address": {
+          "street1": "100 Boylston Street",
+          "street2": "Suite 300",
+          "city": "Boston",
+          "state": "MA",
+          "zip": "02116"
+        },
+        "phone": "617-555-3000",
+        "fax": "617-555-3099",
+        "place_of_service_code": "11"
+      },
+      "schedule": {
+        "monday": { "start": "08:00", "end": "17:00", "lunch": "12:00-13:00" },
+        "tuesday": { "start": "08:00", "end": "17:00", "lunch": "12:00-13:00" },
+        "wednesday": { "start": "08:00", "end": "12:00", "lunch": null },
+        "thursday": { "start": "08:00", "end": "17:00", "lunch": "12:00-13:00" },
+        "friday": { "start": "08:00", "end": "15:00", "lunch": "12:00-13:00" },
+        "saturday": null,
+        "sunday": null
+      },
+      "appointment_types": {
+        "new_patient": { "duration_minutes": 45, "allowed": true },
+        "follow_up": { "duration_minutes": 20, "allowed": true },
+        "annual_physical": { "duration_minutes": 40, "allowed": true },
+        "telehealth": { "duration_minutes": 20, "allowed": true },
+        "urgent": { "duration_minutes": 30, "allowed": true }
+      },
+      "languages": ["en", "ko"],
+      "status": "active"
+    },
+    {
+      "id": "prov-002",
+      "npi": "2345678901",
+      "first_name": "Raj",
+      "last_name": "Patel",
+      "credentials": "MD",
+      "specialty": "Family Medicine",
+      "taxonomy_code": "207Q00000X",
+      "email": "raj.patel@meridianhealth.io",
+      "phone": "617-555-3002",
+      "accepting_new_patients": true,
+      "practice_location": {
+        "name": "Meridian Health - Back Bay",
+        "address": {
+          "street1": "100 Boylston Street",
+          "street2": "Suite 300",
+          "city": "Boston",
+          "state": "MA",
+          "zip": "02116"
+        },
+        "phone": "617-555-3000",
+        "fax": "617-555-3099",
+        "place_of_service_code": "11"
+      },
+      "schedule": {
+        "monday": { "start": "09:00", "end": "18:00", "lunch": "13:00-14:00" },
+        "tuesday": { "start": "09:00", "end": "18:00", "lunch": "13:00-14:00" },
+        "wednesday": { "start": "09:00", "end": "18:00", "lunch": "13:00-14:00" },
+        "thursday": { "start": "09:00", "end": "18:00", "lunch": "13:00-14:00" },
+        "friday": { "start": "09:00", "end": "16:00", "lunch": "12:00-13:00" },
+        "saturday": null,
+        "sunday": null
+      },
+      "appointment_types": {
+        "new_patient": { "duration_minutes": 40, "allowed": true },
+        "follow_up": { "duration_minutes": 20, "allowed": true },
+        "annual_physical": { "duration_minutes": 45, "allowed": true },
+        "telehealth": { "duration_minutes": 20, "allowed": true },
+        "urgent": { "duration_minutes": 30, "allowed": true }
+      },
+      "languages": ["en", "hi", "gu"],
+      "status": "active"
+    },
+    {
+      "id": "prov-003",
+      "npi": "3456789012",
+      "first_name": "Michael",
+      "last_name": "Torres",
+      "credentials": "MD, FACC",
+      "specialty": "Cardiology",
+      "taxonomy_code": "207RC0000X",
+      "email": "michael.torres@meridianhealth.io",
+      "phone": "617-555-3003",
+      "accepting_new_patients": false,
+      "practice_location": {
+        "name": "Meridian Health - Longwood",
+        "address": {
+          "street1": "350 Longwood Avenue",
+          "street2": "Floor 4",
+          "city": "Boston",
+          "state": "MA",
+          "zip": "02115"
+        },
+        "phone": "617-555-4000",
+        "fax": "617-555-4099",
+        "place_of_service_code": "11"
+      },
+      "schedule": {
+        "monday": { "start": "08:00", "end": "16:00", "lunch": "12:00-13:00" },
+        "tuesday": { "start": "08:00", "end": "16:00", "lunch": "12:00-13:00" },
+        "wednesday": null,
+        "thursday": { "start": "08:00", "end": "16:00", "lunch": "12:00-13:00" },
+        "friday": { "start": "08:00", "end": "14:00", "lunch": null },
+        "saturday": null,
+        "sunday": null
+      },
+      "appointment_types": {
+        "new_patient": { "duration_minutes": 60, "allowed": true },
+        "follow_up": { "duration_minutes": 30, "allowed": true },
+        "annual_physical": { "duration_minutes": 0, "allowed": false },
+        "telehealth": { "duration_minutes": 30, "allowed": true },
+        "urgent": { "duration_minutes": 45, "allowed": true }
+      },
+      "languages": ["en", "es"],
+      "status": "active"
+    },
+    {
+      "id": "prov-004",
+      "npi": "4567890123",
+      "first_name": "Angela",
+      "last_name": "Davis-Wright",
+      "credentials": "MD, MPH",
+      "specialty": "Internal Medicine",
+      "taxonomy_code": "207R00000X",
+      "email": "angela.daviswright@meridianhealth.io",
+      "phone": "617-555-3004",
+      "accepting_new_patients": true,
+      "practice_location": {
+        "name": "Meridian Health - Roxbury",
+        "address": {
+          "street1": "10 Malcolm X Boulevard",
+          "street2": null,
+          "city": "Roxbury",
+          "state": "MA",
+          "zip": "02119"
+        },
+        "phone": "617-555-5000",
+        "fax": "617-555-5099",
+        "place_of_service_code": "11"
+      },
+      "schedule": {
+        "monday": { "start": "08:30", "end": "17:30", "lunch": "12:30-13:30" },
+        "tuesday": { "start": "08:30", "end": "17:30", "lunch": "12:30-13:30" },
+        "wednesday": { "start": "08:30", "end": "17:30", "lunch": "12:30-13:30" },
+        "thursday": { "start": "08:30", "end": "17:30", "lunch": "12:30-13:30" },
+        "friday": { "start": "08:30", "end": "15:00", "lunch": "12:00-13:00" },
+        "saturday": { "start": "09:00", "end": "12:00", "lunch": null },
+        "sunday": null
+      },
+      "appointment_types": {
+        "new_patient": { "duration_minutes": 45, "allowed": true },
+        "follow_up": { "duration_minutes": 20, "allowed": true },
+        "annual_physical": { "duration_minutes": 40, "allowed": true },
+        "telehealth": { "duration_minutes": 20, "allowed": true },
+        "urgent": { "duration_minutes": 30, "allowed": true }
+      },
+      "languages": ["en"],
+      "status": "active"
+    },
+    {
+      "id": "prov-005",
+      "npi": "5678901234",
+      "first_name": "Elena",
+      "last_name": "Volkov",
+      "credentials": "DO",
+      "specialty": "Family Medicine",
+      "taxonomy_code": "207Q00000X",
+      "email": "elena.volkov@meridianhealth.io",
+      "phone": "508-555-3005",
+      "accepting_new_patients": true,
+      "practice_location": {
+        "name": "Meridian Health - Framingham",
+        "address": {
+          "street1": "500 Old Connecticut Path",
+          "street2": "Suite 100",
+          "city": "Framingham",
+          "state": "MA",
+          "zip": "01701"
+        },
+        "phone": "508-555-6000",
+        "fax": "508-555-6099",
+        "place_of_service_code": "11"
+      },
+      "schedule": {
+        "monday": { "start": "07:30", "end": "16:30", "lunch": "12:00-13:00" },
+        "tuesday": { "start": "07:30", "end": "16:30", "lunch": "12:00-13:00" },
+        "wednesday": { "start": "07:30", "end": "16:30", "lunch": "12:00-13:00" },
+        "thursday": { "start": "07:30", "end": "16:30", "lunch": "12:00-13:00" },
+        "friday": { "start": "07:30", "end": "16:30", "lunch": "12:00-13:00" },
+        "saturday": null,
+        "sunday": null
+      },
+      "appointment_types": {
+        "new_patient": { "duration_minutes": 40, "allowed": true },
+        "follow_up": { "duration_minutes": 15, "allowed": true },
+        "annual_physical": { "duration_minutes": 40, "allowed": true },
+        "telehealth": { "duration_minutes": 15, "allowed": true },
+        "urgent": { "duration_minutes": 30, "allowed": true }
+      },
+      "languages": ["en", "ru"],
+      "status": "active"
+    },
+    {
+      "id": "prov-006",
+      "npi": "6789012345",
+      "first_name": "James",
+      "last_name": "Adeyemi",
+      "credentials": "MD, FACE",
+      "specialty": "Endocrinology",
+      "taxonomy_code": "207RE0101X",
+      "email": "james.adeyemi@meridianhealth.io",
+      "phone": "617-555-3006",
+      "accepting_new_patients": true,
+      "practice_location": {
+        "name": "Meridian Health - Longwood",
+        "address": {
+          "street1": "350 Longwood Avenue",
+          "street2": "Floor 6",
+          "city": "Boston",
+          "state": "MA",
+          "zip": "02115"
+        },
+        "phone": "617-555-4000",
+        "fax": "617-555-4099",
+        "place_of_service_code": "11"
+      },
+      "schedule": {
+        "monday": { "start": "08:00", "end": "17:00", "lunch": "12:00-13:00" },
+        "tuesday": { "start": "08:00", "end": "17:00", "lunch": "12:00-13:00" },
+        "wednesday": { "start": "08:00", "end": "12:00", "lunch": null },
+        "thursday": { "start": "08:00", "end": "17:00", "lunch": "12:00-13:00" },
+        "friday": null,
+        "saturday": null,
+        "sunday": null
+      },
+      "appointment_types": {
+        "new_patient": { "duration_minutes": 60, "allowed": true },
+        "follow_up": { "duration_minutes": 30, "allowed": true },
+        "annual_physical": { "duration_minutes": 0, "allowed": false },
+        "telehealth": { "duration_minutes": 30, "allowed": true },
+        "urgent": { "duration_minutes": 45, "allowed": false }
+      },
+      "languages": ["en", "yo"],
+      "status": "active"
+    },
+    {
+      "id": "prov-007",
+      "npi": "7890123456",
+      "first_name": "Lisa",
+      "last_name": "Hernandez",
+      "credentials": "MD",
+      "specialty": "Pediatrics",
+      "taxonomy_code": "208000000X",
+      "email": "lisa.hernandez@meridianhealth.io",
+      "phone": "617-555-3007",
+      "accepting_new_patients": true,
+      "practice_location": {
+        "name": "Meridian Health - Back Bay",
+        "address": {
+          "street1": "100 Boylston Street",
+          "street2": "Suite 200",
+          "city": "Boston",
+          "state": "MA",
+          "zip": "02116"
+        },
+        "phone": "617-555-3000",
+        "fax": "617-555-3099",
+        "place_of_service_code": "11"
+      },
+      "schedule": {
+        "monday": { "start": "08:00", "end": "17:00", "lunch": "12:00-13:00" },
+        "tuesday": { "start": "08:00", "end": "17:00", "lunch": "12:00-13:00" },
+        "wednesday": { "start": "08:00", "end": "17:00", "lunch": "12:00-13:00" },
+        "thursday": { "start": "08:00", "end": "17:00", "lunch": "12:00-13:00" },
+        "friday": { "start": "08:00", "end": "16:00", "lunch": "12:00-13:00" },
+        "saturday": null,
+        "sunday": null
+      },
+      "appointment_types": {
+        "new_patient": { "duration_minutes": 45, "allowed": true },
+        "follow_up": { "duration_minutes": 20, "allowed": true },
+        "annual_physical": { "duration_minutes": 40, "allowed": true },
+        "telehealth": { "duration_minutes": 20, "allowed": true },
+        "urgent": { "duration_minutes": 30, "allowed": true }
+      },
+      "languages": ["en", "es"],
+      "status": "active"
+    },
+    {
+      "id": "prov-008",
+      "npi": "8901234567",
+      "first_name": "David",
+      "last_name": "Chang",
+      "credentials": "MD, FACS",
+      "specialty": "General Surgery",
+      "taxonomy_code": "208600000X",
+      "email": "david.chang@meridianhealth.io",
+      "phone": "617-555-3008",
+      "accepting_new_patients": false,
+      "practice_location": {
+        "name": "Meridian Health - Longwood",
+        "address": {
+          "street1": "350 Longwood Avenue",
+          "street2": "Floor 2",
+          "city": "Boston",
+          "state": "MA",
+          "zip": "02115"
+        },
+        "phone": "617-555-4000",
+        "fax": "617-555-4099",
+        "place_of_service_code": "11"
+      },
+      "schedule": {
+        "monday": null,
+        "tuesday": { "start": "10:00", "end": "16:00", "lunch": "12:00-13:00" },
+        "wednesday": null,
+        "thursday": { "start": "10:00", "end": "16:00", "lunch": "12:00-13:00" },
+        "friday": { "start": "08:00", "end": "12:00", "lunch": null },
+        "saturday": null,
+        "sunday": null
+      },
+      "appointment_types": {
+        "new_patient": { "duration_minutes": 45, "allowed": true },
+        "follow_up": { "duration_minutes": 20, "allowed": true },
+        "annual_physical": { "duration_minutes": 0, "allowed": false },
+        "telehealth": { "duration_minutes": 20, "allowed": true },
+        "urgent": { "duration_minutes": 30, "allowed": false }
+      },
+      "languages": ["en", "zh"],
+      "status": "active"
+    },
+    {
+      "id": "prov-009",
+      "npi": "9012345678",
+      "first_name": "Catherine",
+      "last_name": "Murphy",
+      "credentials": "NP",
+      "specialty": "Family Medicine",
+      "taxonomy_code": "363L00000X",
+      "email": "catherine.murphy@meridianhealth.io",
+      "phone": "508-555-3009",
+      "accepting_new_patients": true,
+      "practice_location": {
+        "name": "Meridian Health - Framingham",
+        "address": {
+          "street1": "500 Old Connecticut Path",
+          "street2": "Suite 100",
+          "city": "Framingham",
+          "state": "MA",
+          "zip": "01701"
+        },
+        "phone": "508-555-6000",
+        "fax": "508-555-6099",
+        "place_of_service_code": "11"
+      },
+      "schedule": {
+        "monday": { "start": "08:00", "end": "17:00", "lunch": "12:00-13:00" },
+        "tuesday": { "start": "08:00", "end": "17:00", "lunch": "12:00-13:00" },
+        "wednesday": { "start": "08:00", "end": "17:00", "lunch": "12:00-13:00" },
+        "thursday": null,
+        "friday": { "start": "08:00", "end": "17:00", "lunch": "12:00-13:00" },
+        "saturday": null,
+        "sunday": null
+      },
+      "appointment_types": {
+        "new_patient": { "duration_minutes": 40, "allowed": true },
+        "follow_up": { "duration_minutes": 20, "allowed": true },
+        "annual_physical": { "duration_minutes": 40, "allowed": true },
+        "telehealth": { "duration_minutes": 20, "allowed": true },
+        "urgent": { "duration_minutes": 30, "allowed": true }
+      },
+      "languages": ["en"],
+      "status": "active"
+    },
+    {
+      "id": "prov-010",
+      "npi": "0123456789",
+      "first_name": "Amanda",
+      "last_name": "Osei",
+      "credentials": "PsyD",
+      "specialty": "Behavioral Health",
+      "taxonomy_code": "103T00000X",
+      "email": "amanda.osei@meridianhealth.io",
+      "phone": "617-555-3010",
+      "accepting_new_patients": true,
+      "practice_location": {
+        "name": "Meridian Health - Back Bay",
+        "address": {
+          "street1": "100 Boylston Street",
+          "street2": "Suite 400",
+          "city": "Boston",
+          "state": "MA",
+          "zip": "02116"
+        },
+        "phone": "617-555-3000",
+        "fax": "617-555-3099",
+        "place_of_service_code": "11"
+      },
+      "schedule": {
+        "monday": { "start": "09:00", "end": "18:00", "lunch": "13:00-14:00" },
+        "tuesday": { "start": "09:00", "end": "18:00", "lunch": "13:00-14:00" },
+        "wednesday": { "start": "09:00", "end": "18:00", "lunch": "13:00-14:00" },
+        "thursday": { "start": "09:00", "end": "18:00", "lunch": "13:00-14:00" },
+        "friday": null,
+        "saturday": null,
+        "sunday": null
+      },
+      "appointment_types": {
+        "new_patient": { "duration_minutes": 60, "allowed": true },
+        "follow_up": { "duration_minutes": 50, "allowed": true },
+        "annual_physical": { "duration_minutes": 0, "allowed": false },
+        "telehealth": { "duration_minutes": 50, "allowed": true },
+        "urgent": { "duration_minutes": 0, "allowed": false }
+      },
+      "languages": ["en", "tw"],
+      "status": "active"
+    }
+  ]
+}

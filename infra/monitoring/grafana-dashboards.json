@@ -1,0 +1,212 @@
+{
+  "dashboards": [
+    {
+      "uid": "meridian-service-health",
+      "title": "Meridian Health - Service Health Overview",
+      "description": "Overall health of all Meridian microservices",
+      "tags": ["meridian", "production", "sla"],
+      "refresh": "30s",
+      "panels": [
+        {
+          "title": "Service Availability (SLA: 99.9%)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 24, "x": 0, "y": 0 },
+          "targets": [
+            {
+              "expr": "avg(up{namespace='meridian'}) * 100",
+              "legendFormat": "Current Availability"
+            }
+          ],
+          "thresholds": [
+            { "value": 99.9, "color": "green" },
+            { "value": 99.5, "color": "yellow" },
+            { "value": 99.0, "color": "red" }
+          ]
+        },
+        {
+          "title": "Request Rate by Service",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total{namespace='meridian'}[5m])) by (service)",
+              "legendFormat": "{{ service }}"
+            }
+          ]
+        },
+        {
+          "title": "Error Rate by Service",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total{namespace='meridian', status=~'5..'}[5m])) by (service) / sum(rate(http_requests_total{namespace='meridian'}[5m])) by (service) * 100",
+              "legendFormat": "{{ service }}"
+            }
+          ],
+          "thresholds": [
+            { "value": 1, "color": "yellow" },
+            { "value": 5, "color": "red" }
+          ]
+        },
+        {
+          "title": "P95 Latency by Service",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{namespace='meridian'}[5m])) by (le, service))",
+              "legendFormat": "{{ service }}"
+            }
+          ],
+          "unit": "s"
+        },
+        {
+          "title": "Active Pods by Service",
+          "type": "bargauge",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+          "targets": [
+            {
+              "expr": "count(kube_pod_status_ready{namespace='meridian', condition='true'}) by (pod)",
+              "legendFormat": "{{ pod }}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "uid": "meridian-claims-processing",
+      "title": "Meridian Health - Claims Processing",
+      "description": "Claims submission, remittance processing, and denial metrics",
+      "tags": ["meridian", "claims", "revenue-cycle"],
+      "refresh": "1m",
+      "panels": [
+        {
+          "title": "Claims Submitted (24h)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+          "targets": [
+            {
+              "expr": "sum(increase(meridian_claim_submission_total[24h]))",
+              "legendFormat": "Claims"
+            }
+          ]
+        },
+        {
+          "title": "Submission Success Rate",
+          "type": "gauge",
+          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+          "targets": [
+            {
+              "expr": "sum(rate(meridian_claim_submission_total{status='accepted'}[1h])) / sum(rate(meridian_claim_submission_total[1h])) * 100",
+              "legendFormat": "Success %"
+            }
+          ],
+          "thresholds": [
+            { "value": 95, "color": "green" },
+            { "value": 90, "color": "yellow" },
+            { "value": 0, "color": "red" }
+          ]
+        },
+        {
+          "title": "Denial Rate (24h)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+          "targets": [
+            {
+              "expr": "sum(rate(meridian_claim_denial_total[24h])) / sum(rate(meridian_claim_adjudication_total[24h])) * 100",
+              "legendFormat": "Denial %"
+            }
+          ]
+        },
+        {
+          "title": "Queue Depth",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+          "targets": [
+            {
+              "expr": "meridian_claim_queue_depth",
+              "legendFormat": "Pending"
+            }
+          ],
+          "thresholds": [
+            { "value": 0, "color": "green" },
+            { "value": 500, "color": "yellow" },
+            { "value": 2000, "color": "red" }
+          ]
+        },
+        {
+          "title": "Claims by Status Over Time",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 4 },
+          "targets": [
+            {
+              "expr": "sum(rate(meridian_claim_submission_total[5m])) by (status)",
+              "legendFormat": "{{ status }}"
+            }
+          ]
+        },
+        {
+          "title": "Top Denial Reasons",
+          "type": "piechart",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+          "targets": [
+            {
+              "expr": "topk(10, sum(increase(meridian_claim_denial_total[24h])) by (reason_code))",
+              "legendFormat": "{{ reason_code }}"
+            }
+          ]
+        },
+        {
+          "title": "Clearinghouse Response Time",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(meridian_clearinghouse_response_seconds_bucket[5m])) by (le, clearinghouse))",
+              "legendFormat": "p95 {{ clearinghouse }}"
+            },
+            {
+              "expr": "histogram_quantile(0.50, sum(rate(meridian_clearinghouse_response_seconds_bucket[5m])) by (le, clearinghouse))",
+              "legendFormat": "p50 {{ clearinghouse }}"
+            }
+          ],
+          "unit": "s"
+        }
+      ]
+    },
+    {
+      "uid": "meridian-api-latency",
+      "title": "Meridian Health - API Latency Detail",
+      "description": "Detailed latency breakdown by endpoint and service",
+      "tags": ["meridian", "performance"],
+      "refresh": "30s",
+      "panels": [
+        {
+          "title": "Latency Heatmap - Patient API",
+          "type": "heatmap",
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 },
+          "targets": [
+            {
+              "expr": "sum(rate(http_request_duration_seconds_bucket{service='patient-api'}[1m])) by (le)",
+              "legendFormat": "{{ le }}"
+            }
+          ]
+        },
+        {
+          "title": "Slowest Endpoints (P95)",
+          "type": "table",
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+          "targets": [
+            {
+              "expr": "topk(20, histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{namespace='meridian'}[5m])) by (le, path, method, service)))",
+              "legendFormat": "{{ method }} {{ path }}",
+              "format": "table",
+              "instant": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

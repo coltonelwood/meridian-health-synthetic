@@ -1,0 +1,82 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: meridian-config
+  namespace: meridian
+  labels:
+    app.kubernetes.io/part-of: meridian-health
+data:
+  # --- Database ---
+  db-host: "meridian-production-primary.xxxxxxxxxxxx.us-east-1.rds.amazonaws.com"
+  db-read-host: "meridian-production-replica.xxxxxxxxxxxx.us-east-1.rds.amazonaws.com"
+  db-port: "5432"
+  db-name: "meridian"
+  db-pool-min: "5"
+  db-pool-max: "20"
+
+  # --- Redis ---
+  redis-host: "meridian-production-redis.xxxxxxxxxxxx.use1.cache.amazonaws.com"
+  redis-port: "6379"
+  redis-tls: "true"
+  redis-db: "0"
+
+  # --- RabbitMQ (Amazon MQ) ---
+  rabbitmq-host: "b-xxxx-xxxx-xxxx.mq.us-east-1.amazonaws.com"
+  rabbitmq-port: "5671"
+  rabbitmq-vhost: "meridian"
+
+  # --- Service URLs (internal) ---
+  patient-api-url: "http://patient-api.meridian.svc.cluster.local:3000"
+  claims-engine-url: "http://claims-engine.meridian.svc.cluster.local:3001"
+  referral-service-url: "http://referral-service.meridian.svc.cluster.local:3002"
+  scheduling-service-url: "http://scheduling-service.meridian.svc.cluster.local:3003"
+  document-service-url: "http://document-service.meridian.svc.cluster.local:3004"
+  notification-service-url: "http://notification-service.meridian.svc.cluster.local:3005"
+  fhir-gateway-url: "http://fhir-gateway.meridian.svc.cluster.local:3010"
+  risk-model-url: "http://risk-model-service.meridian.svc.cluster.local:8000"
+
+  # --- External Service URLs ---
+  change-healthcare-api-url: "https://api.changehealthcare.com/v1"
+  availity-api-url: "https://api.availity.com/availity/v1"
+  npi-registry-url: "https://npiregistry.cms.hhs.gov/api/"
+
+  # --- Logging ---
+  log-level: "info"
+  log-format: "json"
+
+  # --- Feature Flags ---
+  # These are simple on/off flags. For more complex feature management,
+  # we use LaunchDarkly (config is in the app, not here).
+  feature-fhir-r4: "true"
+  feature-patient-portal-v2: "false"
+  feature-auto-appeal: "true"
+  feature-readmission-ml-model: "true"
+  feature-bulk-claim-processing: "true"
+  # Rolled back 2026-03-20 due to performance issues with large orgs
+  feature-real-time-eligibility-cache: "false"
+  # In canary rollout - 10% of requests
+  feature-new-matching-algorithm: "canary"
+
+  # --- HIPAA / Compliance ---
+  audit-log-enabled: "true"
+  phi-access-log-enabled: "true"
+  # Minimum TLS version for service-to-service communication
+  min-tls-version: "1.2"
+  # Session timeout in minutes
+  session-timeout: "30"
+  # Maximum failed login attempts before lockout
+  max-login-attempts: "5"
+  # Account lockout duration in minutes
+  lockout-duration: "30"
+
+  # --- Performance Tuning ---
+  # Rate limits (per service, per minute)
+  patient-api-rate-limit: "1000"
+  claims-engine-rate-limit: "500"
+  # Batch sizes
+  claim-batch-size: "50"
+  remittance-batch-size: "100"
+  # Cache TTLs (seconds)
+  patient-cache-ttl: "300"
+  eligibility-cache-ttl: "3600"
+  provider-cache-ttl: "1800"

@@ -1,0 +1,352 @@
+{
+  "resourceType": "Bundle",
+  "id": "condition-bundle-sample",
+  "meta": {
+    "lastUpdated": "2024-10-01T12:00:00Z"
+  },
+  "type": "searchset",
+  "total": 5,
+  "entry": [
+    {
+      "fullUrl": "https://fhir.meridianhealth.io/r4/Condition/cond-001",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-001",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-problems-health-concerns"
+          ]
+        },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active",
+              "display": "Active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/condition-category",
+                "code": "problem-list-item",
+                "display": "Problem List Item"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "I10",
+              "display": "Essential (primary) hypertension"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "59621000",
+              "display": "Essential hypertension"
+            }
+          ],
+          "text": "Essential hypertension"
+        },
+        "subject": {
+          "reference": "Patient/pat-001-a7f3b2c1",
+          "display": "Eleanor Vasquez"
+        },
+        "onsetDateTime": "2018-06-15",
+        "recordedDate": "2020-01-20",
+        "recorder": {
+          "reference": "Practitioner/prov-001",
+          "display": "Dr. Sarah Kim"
+        },
+        "note": [
+          {
+            "text": "Well-controlled on current medication regimen. Last BP reading 128/78."
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "https://fhir.meridianhealth.io/r4/Condition/cond-002",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-002",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-problems-health-concerns"
+          ]
+        },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active",
+              "display": "Active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/condition-category",
+                "code": "problem-list-item",
+                "display": "Problem List Item"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "E11.9",
+              "display": "Type 2 diabetes mellitus without complications"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "44054006",
+              "display": "Type 2 diabetes mellitus"
+            }
+          ],
+          "text": "Type 2 diabetes mellitus"
+        },
+        "subject": {
+          "reference": "Patient/pat-001-a7f3b2c1",
+          "display": "Eleanor Vasquez"
+        },
+        "onsetDateTime": "2015-03-10",
+        "recordedDate": "2020-01-20",
+        "recorder": {
+          "reference": "Practitioner/prov-001",
+          "display": "Dr. Sarah Kim"
+        },
+        "note": [
+          {
+            "text": "Last A1c 6.8%. Managing with metformin and lifestyle modifications."
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "https://fhir.meridianhealth.io/r4/Condition/cond-003",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-003",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-problems-health-concerns"
+          ]
+        },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active",
+              "display": "Active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/condition-category",
+                "code": "problem-list-item",
+                "display": "Problem List Item"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "E78.5",
+              "display": "Hyperlipidemia, unspecified"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "55822004",
+              "display": "Hyperlipidemia"
+            }
+          ],
+          "text": "Hyperlipidemia"
+        },
+        "subject": {
+          "reference": "Patient/pat-004-d0a6e5f4",
+          "display": "Robert Kowalski"
+        },
+        "onsetDateTime": "2010-11-01",
+        "recordedDate": "2019-08-15",
+        "recorder": {
+          "reference": "Practitioner/prov-003",
+          "display": "Dr. Michael Torres"
+        }
+      }
+    },
+    {
+      "fullUrl": "https://fhir.meridianhealth.io/r4/Condition/cond-004",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-004",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-problems-health-concerns"
+          ]
+        },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "resolved",
+              "display": "Resolved"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/condition-category",
+                "code": "encounter-diagnosis",
+                "display": "Encounter Diagnosis"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "J06.9",
+              "display": "Acute upper respiratory infection, unspecified"
+            }
+          ],
+          "text": "Upper respiratory infection"
+        },
+        "subject": {
+          "reference": "Patient/pat-002-b8e4c3d2",
+          "display": "James Okafor"
+        },
+        "onsetDateTime": "2024-10-12",
+        "abatementDateTime": "2024-10-22",
+        "recordedDate": "2024-10-15",
+        "recorder": {
+          "reference": "Practitioner/prov-002",
+          "display": "Dr. Raj Patel"
+        }
+      }
+    },
+    {
+      "fullUrl": "https://fhir.meridianhealth.io/r4/Condition/cond-005",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-005",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-problems-health-concerns"
+          ]
+        },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active",
+              "display": "Active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/condition-category",
+                "code": "problem-list-item",
+                "display": "Problem List Item"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "F41.1",
+              "display": "Generalized anxiety disorder"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "21897009",
+              "display": "Generalized anxiety disorder"
+            }
+          ],
+          "text": "Generalized anxiety disorder"
+        },
+        "subject": {
+          "reference": "Patient/pat-005-e1b7f6a5",
+          "display": "Priya Nair"
+        },
+        "onsetDateTime": "2022-05-20",
+        "recordedDate": "2022-06-01",
+        "recorder": {
+          "reference": "Practitioner/prov-010",
+          "display": "Dr. Amanda Osei"
+        },
+        "note": [
+          {
+            "text": "Patient reports improvement with current SSRI regimen and CBT. Follow up in 3 months."
+          }
+        ]
+      }
+    }
+  ]
+}

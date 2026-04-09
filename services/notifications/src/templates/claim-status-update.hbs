@@ -1,0 +1,122 @@
+{{!-- subject: Claim Status Update - {{claimNumber}} --}}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claim Status Update</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5; }
+    .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
+    .header { background-color: #1a5276; color: #ffffff; padding: 24px; text-align: center; }
+    .content { padding: 32px 24px; color: #333333; line-height: 1.6; }
+    .status-badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 14px; text-transform: uppercase; }
+    .status-approved { background-color: #d4efdf; color: #1e8449; }
+    .status-denied { background-color: #fadbd8; color: #c0392b; }
+    .status-pending { background-color: #fef9e7; color: #b7950b; }
+    .status-processing { background-color: #ebf5fb; color: #1a5276; }
+    .claim-details { background-color: #f8f9fa; padding: 20px; margin: 24px 0; border-radius: 6px; border: 1px solid #e9ecef; }
+    .detail-row { margin-bottom: 12px; }
+    .detail-label { font-weight: bold; color: #555; display: block; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .detail-value { color: #333; font-size: 16px; }
+    .amount { font-size: 24px; font-weight: bold; color: #1a5276; }
+    .cta-button { display: inline-block; background-color: #1a5276; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 6px; margin: 16px 0; font-weight: bold; }
+    .footer { background-color: #f8f9fa; padding: 20px 24px; font-size: 12px; color: #888; text-align: center; border-top: 1px solid #eee; }
+    .hipaa-notice { font-size: 10px; color: #aaa; margin-top: 16px; }
+    .denial-info { background-color: #fadbd8; border: 1px solid #e6b0aa; padding: 16px; border-radius: 6px; margin: 16px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>Meridian Health</h2>
+    </div>
+
+    <div class="content">
+      <p>Dear {{recipientName}},</p>
+
+      <p>There has been an update to your insurance claim:</p>
+
+      <div class="claim-details">
+        <div class="detail-row">
+          <span class="detail-label">Claim Number</span>
+          <span class="detail-value">{{claimNumber}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Date of Service</span>
+          <span class="detail-value">{{formatDate dateOfService}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Provider</span>
+          <span class="detail-value">Dr. {{providerName}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Status</span>
+          {{#if (eq status "approved")}}
+            <span class="status-badge status-approved">Approved</span>
+          {{else if (eq status "denied")}}
+            <span class="status-badge status-denied">Denied</span>
+          {{else if (eq status "pending")}}
+            <span class="status-badge status-pending">Pending Review</span>
+          {{else}}
+            <span class="status-badge status-processing">{{capitalize status}}</span>
+          {{/if}}
+        </div>
+
+        {{#if billedAmount}}
+        <div class="detail-row">
+          <span class="detail-label">Billed Amount</span>
+          <span class="detail-value">{{formatCurrency billedAmount}}</span>
+        </div>
+        {{/if}}
+
+        {{#if approvedAmount}}
+        <div class="detail-row">
+          <span class="detail-label">Approved Amount</span>
+          <span class="detail-value amount">{{formatCurrency approvedAmount}}</span>
+        </div>
+        {{/if}}
+
+        {{#if patientResponsibility}}
+        <div class="detail-row">
+          <span class="detail-label">Your Responsibility</span>
+          <span class="detail-value amount">{{formatCurrency patientResponsibility}}</span>
+        </div>
+        {{/if}}
+      </div>
+
+      {{#if (eq status "denied")}}
+      <div class="denial-info">
+        <p><strong>Reason for Denial:</strong></p>
+        <p>{{denialReason}}</p>
+        {{#if appealDeadline}}
+        <p><strong>Appeal Deadline:</strong> {{formatDate appealDeadline}}</p>
+        {{/if}}
+        <p>You have the right to appeal this decision. Please contact our billing department at {{supportPhone}} for assistance with the appeals process.</p>
+      </div>
+      {{/if}}
+
+      {{#if (eq status "approved")}}
+      <p>Your claim has been approved! The payment will be processed according to your plan's Explanation of Benefits (EOB).</p>
+      {{/if}}
+
+      <a href="https://app.meridianhealth.io/billing/claims/{{claimId}}" class="cta-button">
+        View Claim Details
+      </a>
+
+      <p>If you have questions about this claim, please contact our billing department at {{supportPhone}}.</p>
+    </div>
+
+    <div class="footer">
+      <p>Meridian Health Technologies | {{supportPhone}} | {{supportEmail}}</p>
+      <p><a href="{{unsubscribeLink}}">Manage notification preferences</a></p>
+      <p class="hipaa-notice">
+        This email may contain Protected Health Information (PHI) and is intended
+        only for the named recipient. If you received this email in error, please
+        delete it and notify us immediately at {{supportEmail}}.
+        &copy; {{currentYear}} Meridian Health Technologies. All rights reserved.
+      </p>
+    </div>
+  </div>
+</body>
+</html>

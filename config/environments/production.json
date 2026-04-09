@@ -1,0 +1,246 @@
+{
+  "_environment": "production",
+  "_description": "Production configuration. Sensitive values are placeholders - actual values in AWS Secrets Manager.",
+  "_warning": "DO NOT put real credentials in this file. All secrets must be in AWS Secrets Manager.",
+
+  "app": {
+    "name": "Meridian Health Platform",
+    "environment": "production",
+    "debug": false,
+    "log_level": "warn",
+    "log_format": "json"
+  },
+
+  "api_gateway": {
+    "url": "https://api.meridianhealth.io",
+    "rate_limit": {
+      "enabled": true,
+      "requests_per_minute": 100,
+      "burst": 150
+    },
+    "cors": {
+      "allowed_origins": [
+        "https://portal.meridianhealth.io",
+        "https://provider.meridianhealth.io",
+        "https://admin.meridianhealth.io"
+      ],
+      "allowed_methods": ["GET", "POST", "PUT", "PATCH", "DELETE"],
+      "allowed_headers": ["Authorization", "Content-Type", "X-Request-ID", "X-Correlation-ID"],
+      "max_age_seconds": 3600
+    }
+  },
+
+  "services": {
+    "auth": {
+      "url": "http://auth-service.production.svc.cluster.local:3011",
+      "jwt_expiry_minutes": 15,
+      "refresh_token_expiry_days": 7,
+      "password_reset_expiry_minutes": 15,
+      "mfa_enabled": true,
+      "password_policy": {
+        "min_length": 12,
+        "require_uppercase": true,
+        "require_lowercase": true,
+        "require_number": true,
+        "require_special": true,
+        "password_history": 6,
+        "max_age_days": 90
+      }
+    },
+    "patient": {
+      "url": "http://patient-service.production.svc.cluster.local:3010",
+      "duplicate_detection": {
+        "enabled": true,
+        "threshold": 0.92
+      }
+    },
+    "scheduling": {
+      "url": "http://scheduling-service.production.svc.cluster.local:3013",
+      "default_timezone": "America/New_York",
+      "booking_window_days": 90,
+      "cancellation_window_hours": 24
+    },
+    "billing": {
+      "url": "http://billing-service.production.svc.cluster.local:3012",
+      "auto_claim_creation": true,
+      "self_pay_discount_pct": 40
+    },
+    "claims": {
+      "url": "http://claims-service.production.svc.cluster.local:3014",
+      "auto_submission": true,
+      "scrubbing_strict_mode": true,
+      "timely_filing_warning_days": 30
+    },
+    "documents": {
+      "url": "http://documents-service.production.svc.cluster.local:3015",
+      "virus_scan_enabled": true,
+      "max_file_size_mb": 25
+    },
+    "comms": {
+      "url": "http://comms-service.production.svc.cluster.local:3016",
+      "email_enabled": true,
+      "sms_enabled": true,
+      "push_enabled": true,
+      "batch_email_max": 500,
+      "sms_rate_limit_per_minute": 50
+    },
+    "analytics": {
+      "url": "http://analytics-service.production.svc.cluster.local:3017"
+    },
+    "audit": {
+      "url": "http://audit-service.production.svc.cluster.local:3018",
+      "log_to_console": false,
+      "retention_years": 6
+    },
+    "fhir": {
+      "url": "http://fhir-facade.production.svc.cluster.local:3019",
+      "base_url": "https://fhir.meridianhealth.io/r4"
+    },
+    "eligibility": {
+      "url": "http://eligibility-service.production.svc.cluster.local:3020",
+      "use_mock_responses": false,
+      "cache_ttl_minutes": 60
+    }
+  },
+
+  "database": {
+    "primary": {
+      "host": "meridian-prod.cluster-xxxx.us-east-1.rds.amazonaws.com",
+      "port": 5432,
+      "database": "meridian_prod",
+      "username": "<<AWS_SECRETS_MANAGER:meridian/prod/db-primary>>",
+      "password": "<<AWS_SECRETS_MANAGER:meridian/prod/db-primary>>",
+      "pool_min": 10,
+      "pool_max": 50,
+      "ssl": true,
+      "ssl_mode": "verify-full",
+      "statement_timeout_ms": 30000,
+      "idle_in_transaction_session_timeout_ms": 60000
+    },
+    "analytics": {
+      "host": "meridian-prod-analytics.cluster-ro-xxxx.us-east-1.rds.amazonaws.com",
+      "port": 5432,
+      "database": "meridian_analytics_prod",
+      "username": "<<AWS_SECRETS_MANAGER:meridian/prod/db-analytics>>",
+      "password": "<<AWS_SECRETS_MANAGER:meridian/prod/db-analytics>>",
+      "pool_min": 5,
+      "pool_max": 25,
+      "ssl": true,
+      "ssl_mode": "verify-full",
+      "read_only": true
+    },
+    "mongodb": {
+      "uri": "<<AWS_SECRETS_MANAGER:meridian/prod/mongodb>>",
+      "options": {
+        "tls": true,
+        "retryWrites": true,
+        "w": "majority",
+        "readPreference": "secondaryPreferred",
+        "maxPoolSize": 50
+      }
+    }
+  },
+
+  "redis": {
+    "host": "meridian-prod.xxxx.use1.cache.amazonaws.com",
+    "port": 6380,
+    "password": "<<AWS_SECRETS_MANAGER:meridian/prod/redis>>",
+    "tls": true,
+    "cluster_mode": true,
+    "databases": {
+      "cache": 0,
+      "rate_limit": 1,
+      "queues": 3
+    }
+  },
+
+  "rabbitmq": {
+    "url": "<<AWS_SECRETS_MANAGER:meridian/prod/rabbitmq>>",
+    "prefetch_count": 50,
+    "retry_max_attempts": 5,
+    "retry_delay_ms": 5000,
+    "dlx_enabled": true,
+    "dlx_max_retries": 3
+  },
+
+  "aws": {
+    "region": "us-east-1",
+    "dr_region": "us-west-2",
+    "s3": {
+      "documents_bucket": "meridian-documents-prod",
+      "statements_bucket": "meridian-statements-prod",
+      "archive_bucket": "meridian-archive-prod",
+      "server_side_encryption": "aws:kms"
+    },
+    "kms": {
+      "key_id": "<<AWS_SECRETS_MANAGER:meridian/prod/kms-key-id>>"
+    }
+  },
+
+  "external_services": {
+    "clearinghouse": {
+      "provider": "change_healthcare",
+      "endpoint": "https://api.changehealthcare.com/api/v1",
+      "use_mock": false,
+      "timeout_ms": 30000,
+      "circuit_breaker": {
+        "failure_threshold": 5,
+        "recovery_timeout_ms": 60000
+      }
+    },
+    "eligibility": {
+      "provider": "availity",
+      "endpoint": "https://api.availity.com/api/v1",
+      "use_mock": false,
+      "timeout_ms": 15000
+    },
+    "stripe": {
+      "public_key": "pk_live_xxxx",
+      "webhook_secret": "<<AWS_SECRETS_MANAGER:meridian/prod/stripe>>"
+    },
+    "twilio": {
+      "use_mock": false,
+      "account_sid": "<<AWS_SECRETS_MANAGER:meridian/prod/twilio>>",
+      "messaging_service_sid": "<<AWS_SECRETS_MANAGER:meridian/prod/twilio>>"
+    },
+    "sendgrid": {
+      "use_mock": false,
+      "api_key": "<<AWS_SECRETS_MANAGER:meridian/prod/sendgrid>>"
+    }
+  },
+
+  "security": {
+    "encryption": {
+      "algorithm": "aes-256-gcm",
+      "at_rest_enabled": true
+    },
+    "hipaa": {
+      "audit_logging": true,
+      "session_timeout_minutes": 15,
+      "auto_logout_minutes": 15,
+      "phi_access_logging": true,
+      "minimum_tls_version": "1.2"
+    },
+    "waf": {
+      "enabled": true,
+      "rules": ["AWSManagedRulesCommonRuleSet", "AWSManagedRulesKnownBadInputsRuleSet", "AWSManagedRulesSQLiRuleSet"]
+    }
+  },
+
+  "monitoring": {
+    "datadog": {
+      "enabled": true,
+      "apm_enabled": true,
+      "profiling_enabled": true,
+      "log_injection": true
+    },
+    "sentry": {
+      "enabled": true,
+      "sample_rate": 0.1,
+      "traces_sample_rate": 0.05
+    }
+  },
+
+  "feature_flags_source": "remote",
+  "feature_flags_endpoint": "http://feature-flags.production.svc.cluster.local:8080/api/flags"
+}

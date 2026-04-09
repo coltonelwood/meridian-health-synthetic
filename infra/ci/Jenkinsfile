@@ -1,0 +1,306 @@
+/**
+ * Meridian Health - Legacy Jenkins Pipeline
+ *
+ * STATUS: PARTIALLY MIGRATED TO GITHUB ACTIONS
+ *
+ * Migration status (as of 2026-03-01):
+ * - [MIGRATED] Unit tests -> .github/workflows/test.yml
+ * - [MIGRATED] Linting -> .github/workflows/lint.yml
+ * - [MIGRATED] Docker build -> .github/workflows/build.yml
+ * - [IN PROGRESS] Integration tests -> still here (needs test env setup in GHA)
+ * - [NOT STARTED] Deployment -> still here (complex approval flow)
+ * - [NOT STARTED] Database migrations -> still here (requires VPN access)
+ *
+ * This Jenkinsfile will be fully deprecated once all stages are migrated.
+ * Target date: Q3 2026 (was Q1 2026, pushed twice)
+ *
+ * Jenkins server: https://jenkins.meridianhealth.io
+ * Contact: Platform Engineering team
+ */
+
+pipeline {
+    agent {
+        docker {
+            image 'meridian/ci-agent:latest'
+            args '-v /var/run/docker.sock:/var/run/docker.sock --network host'
+        }
+    }
+
+    options {
+        timeout(time: 45, unit: 'MINUTES')
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '30'))
+        timestamps()
+    }
+
+    environment {
+        AWS_DEFAULT_REGION = 'us-east-1'
+        DOCKER_REGISTRY = credentials('docker-registry-url')
+        SONAR_TOKEN = credentials('sonarqube-token')
+        // HIPAA: Never log these values
+        DB_PASSWORD = credentials('integration-test-db-password')
+        SLACK_WEBHOOK = credentials('slack-webhook-url')
+    }
+
+    parameters {
+        choice(
+            name: 'ENVIRONMENT',
+            choices: ['development', 'staging', 'production'],
+            description: 'Target deployment environment'
+        )
+        booleanParam(
+            name: 'RUN_INTEGRATION_TESTS',
+            defaultValue: true,
+            description: 'Run integration tests (adds ~15 min)'
+        )
+        booleanParam(
+            name: 'SKIP_SECURITY_SCAN',
+            defaultValue: false,
+            description: 'Skip security scan (NOT recommended)'
+        )
+        string(
+            name: 'DEPLOY_SERVICES',
+            defaultValue: 'all',
+            description: 'Comma-separated list of services to deploy, or "all"'
+        )
+    }
+
+    stages {
+        // NOTE: Build and unit test stages have been migrated to GitHub Actions
+        // They're commented out here but kept for reference during migration
+
+        /*
+        stage('Build') {
+            // MIGRATED -> .github/workflows/build.yml
+            steps {
+                sh 'npm ci'
+                sh 'npm run build'
+            }
+        }
+
+        stage('Unit Tests') {
+            // MIGRATED -> .github/workflows/test.yml
+            steps {
+                sh 'npm run test:unit -- --coverage'
+            }
+        }
+
+        stage('Lint') {
+            // MIGRATED -> .github/workflows/lint.yml
+            steps {
+                sh 'npm run lint'
+            }
+        }
+        */
+
+        stage('Integration Tests') {
+            when {
+                expression { params.RUN_INTEGRATION_TESTS }
+            }
+            steps {
+                script {
+                    // Start test dependencies
+                    sh '''
+                        docker-compose -f docker-compose.test.yml up -d postgres redis rabbitmq
+                        ./scripts/wait-for-services.sh
+                    '''
+
+                    // Run migrations on test database
+                    sh '''
+                        DATABASE_URL="postgresql://meridian:${DB_PASSWORD}@localhost:5433/meridian_test" \
+                        npm run migrate:test
+                    '''
+
+                    // Run integration tests with retry for flaky tests
+                    // TODO: Fix the flaky tests instead of retrying them
+                    // Known flaky tests:
+                    // - claims-engine/test/clearinghouse.integration.test.ts (timing issue)
+                    // - patient-api/test/search.integration.test.ts (race condition in ES indexing)
+                    retry(2) {
+                        sh '''
+                            DATABASE_URL="postgresql://meridian:${DB_PASSWORD}@localhost:5433/meridian_test" \
+                            REDIS_URL="redis://localhost:6380" \
+                            RABBITMQ_URL="amqp://guest:guest@localhost:5673" \
+                            npm run test:integration -- --forceExit --detectOpenHandles
+                        '''
+                    }
+                }
+            }
+            post {
+                always {
+                    sh 'docker-compose -f docker-compose.test.yml down -v'
+                    junit 'test-results/**/*.xml'
+                }
+            }
+        }
+
+        stage('Security Scan') {
+            when {
+                expression { !params.SKIP_SECURITY_SCAN }
+            }
+            parallel {
+                stage('SAST') {
+                    steps {
+                        sh '''
+                            sonar-scanner \
+                                -Dsonar.projectKey=meridian-health \
+                                -Dsonar.sources=. \
+                                -Dsonar.host.url=https://sonar.meridianhealth.io \
+                                -Dsonar.login=${SONAR_TOKEN}
+                        '''
+                    }
+                }
+                stage('Dependency Scan') {
+                    steps {
+                        sh 'npm audit --production --audit-level=high'
+                        // Snyk scan for deeper vulnerability analysis
+                        sh 'snyk test --severity-threshold=high --org=meridian-health'
+                    }
+                }
+                stage('Container Scan') {
+                    steps {
+                        sh '''
+                            trivy image --exit-code 1 --severity HIGH,CRITICAL \
+                                --ignore-unfixed \
+                                ${DOCKER_REGISTRY}/patient-api:${GIT_COMMIT}
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to Staging') {
+            when {
+                expression { params.ENVIRONMENT in ['staging', 'production'] }
+                branch 'main'
+            }
+            steps {
+                script {
+                    def services = params.DEPLOY_SERVICES == 'all'
+                        ? ['patient-api', 'claims-engine', 'referral-service', 'scheduling-service', 'document-service', 'notification-service']
+                        : params.DEPLOY_SERVICES.split(',').collect { it.trim() }
+
+                    for (service in services) {
+                        sh """
+                            aws ecs update-service \
+                                --cluster meridian-staging \
+                                --service ${service} \
+                                --force-new-deployment \
+                                --region ${AWS_DEFAULT_REGION}
+                        """
+                    }
+
+                    // Wait for deployment to stabilize
+                    for (service in services) {
+                        sh """
+                            aws ecs wait services-stable \
+                                --cluster meridian-staging \
+                                --services ${service} \
+                                --region ${AWS_DEFAULT_REGION}
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Smoke Tests (Staging)') {
+            when {
+                expression { params.ENVIRONMENT in ['staging', 'production'] }
+                branch 'main'
+            }
+            steps {
+                sh '''
+                    npm run test:smoke -- \
+                        --baseUrl=https://api.staging.meridianhealth.io \
+                        --timeout=30000
+                '''
+            }
+        }
+
+        stage('Production Approval') {
+            when {
+                expression { params.ENVIRONMENT == 'production' }
+                branch 'main'
+            }
+            steps {
+                // Requires approval from at least one person from each team
+                script {
+                    def approvers = input(
+                        message: 'Approve production deployment?',
+                        submitterParameter: 'approver',
+                        parameters: [
+                            string(name: 'CHANGE_TICKET', description: 'Change management ticket number (required)'),
+                            booleanParam(name: 'CONFIRM_ROLLBACK_PLAN', defaultValue: false, description: 'I have reviewed the rollback plan'),
+                        ]
+                    )
+
+                    if (!approvers.CONFIRM_ROLLBACK_PLAN) {
+                        error('Rollback plan must be reviewed before production deployment')
+                    }
+
+                    if (!approvers.CHANGE_TICKET?.trim()) {
+                        error('Change management ticket is required for production deployments')
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to Production') {
+            when {
+                expression { params.ENVIRONMENT == 'production' }
+                branch 'main'
+            }
+            steps {
+                script {
+                    def services = params.DEPLOY_SERVICES == 'all'
+                        ? ['patient-api', 'claims-engine', 'referral-service', 'scheduling-service', 'document-service', 'notification-service']
+                        : params.DEPLOY_SERVICES.split(',').collect { it.trim() }
+
+                    // Deploy one service at a time in production
+                    for (service in services) {
+                        sh """
+                            aws ecs update-service \
+                                --cluster meridian-production \
+                                --service ${service} \
+                                --force-new-deployment \
+                                --region ${AWS_DEFAULT_REGION}
+                        """
+
+                        sh """
+                            aws ecs wait services-stable \
+                                --cluster meridian-production \
+                                --services ${service} \
+                                --region ${AWS_DEFAULT_REGION}
+                        """
+
+                        // Quick health check after each service
+                        sh """
+                            curl -sf https://api.meridianhealth.io/health \
+                                || (echo "Health check failed after deploying ${service}" && exit 1)
+                        """
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            slackSend(
+                channel: '#deployments',
+                color: 'good',
+                message: "Deployment successful: ${env.JOB_NAME} #${env.BUILD_NUMBER} to ${params.ENVIRONMENT} (<${env.BUILD_URL}|Open>)"
+            )
+        }
+        failure {
+            slackSend(
+                channel: '#deployments',
+                color: 'danger',
+                message: "Deployment FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER} to ${params.ENVIRONMENT} (<${env.BUILD_URL}|Open>)"
+            )
+        }
+        always {
+            cleanWs()
+        }
+    }
+}
